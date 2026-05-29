@@ -1,784 +1,922 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard ฉีดวัคซีนไข้หวัดใหญ่ กาฬสินธุ์</title>
-<meta name="description" content="แดชบอร์ดสรุปผลการฉีดวัคซีนป้องกันโรคไข้หวัดใหญ่ตามฤดูกาล จังหวัดกาฬสินธุ์ เขตสุขภาพที่ 7">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<style>
-:root {
-  --bg:#0f172a;
-  --bg2:#1e293b;
-  --bg3:#334155;
-  --fg:#f1f5f9;
-  --fg2:#94a3b8;
-  --fg3:#64748b;
-  --blue:#3b82f6;
-  --cyan:#06b6d4;
-  --green:#10b981;
-  --amber:#f59e0b;
-  --red:#ef4444;
-  --purple:#8b5cf6;
-  --bdr:#334155;
-  --r:16px;
-}
-body.theme-light {
-  --bg:#f8fafc;
-  --bg2:#ffffff;
-  --bg3:#f1f5f9;
-  --fg:#0f172a;
-  --fg2:#475569;
-  --fg3:#94a3b8;
-  --bdr:#cbd5e1;
-}
-body.theme-blue {
-  --bg:#0b132b;
-  --bg2:#1c2541;
-  --bg3:#3a506b;
-  --fg:#ffffff;
-  --fg2:#8b9bb4;
-  --fg3:#5c6b8c;
-  --blue:#00b4d8;
-  --cyan:#90e0ef;
-  --bdr:#3a506b;
-}
-body.theme-emerald {
-  --bg:#022c22;
-  --bg2:#064e3b;
-  --bg3:#0f766e;
-  --fg:#f0fdf4;
-  --fg2:#a7f3d0;
-  --fg3:#34d399;
-  --blue:#10b981;
-  --cyan:#34d399;
-  --bdr:#0f766e;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard ความครอบคลุมวัคซีน MMR2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        /* ตั้งค่าพื้นฐานและการจัดเลย์เอาต์ */
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            margin: 0;
+            padding: 20px;
+            color: #334155;
+            min-height: 100vh;
+        }
+        .dashboard-container { max-width: 1280px; margin: auto; }
+        
+        /* ส่วนหัวของ Dashboard */
+        .header {
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            color: white;
+        }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .header p { margin: 6px 0 0 0; color: #e0e7ff; font-size: 14px; opacity: 0.9; }
+        
+        .btn-download {
+            background: #10b981; color: white; border: none; padding: 10px 20px;
+            border-radius: 50px; font-family: 'Prompt', sans-serif; font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+        .btn-download:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4); }
 
-/* Theme Selector */
-.theme-selector {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-left: auto;
-  padding-left: 16px;
-}
-.theme-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--bdr);
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
-  position: relative;
-  outline: none;
-}
-.theme-btn:hover {
-  transform: scale(1.2);
-}
-.theme-btn.active {
-  border-color: var(--fg);
-  transform: scale(1.1);
-  box-shadow: 0 0 8px var(--blue);
-}
-.tb-dark { background: #0f172a; }
-.tb-light { background: #ffffff; border-color: #cbd5e1; }
-.tb-blue { background: #00b4d8; }
-.tb-emerald { background: #10b981; }
+        /* ส่วนของ Dropdown Controls */
+        .controls {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 20px 25px;
+            border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; border: 1px solid #e2e8f0;
+        }
+        .control-group { display: flex; flex-direction: column; }
+        .control-group label { font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #475569; }
+        .control-group select {
+            padding: 10px 12px; border-radius: 10px; border: 2px solid #cbd5e1; font-family: 'Prompt', sans-serif;
+            font-size: 14px; color: #1e293b; outline: none; cursor: pointer; background-color: #f8fafc;
+        }
+        .control-group select:focus { border-color: #3b82f6; background-color: #ffffff; }
 
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;transition:background 0.3s, color 0.3s;}
-.container{max-width:1400px;margin:0 auto;padding:24px;}
+        /* ส่วนของปุ่มคัดกรองผลงาน (Filter Buttons) */
+        .filter-section {
+            background: #ffffff; padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px; border: 1px solid #e2e8f0;
+        }
+        .filter-section-title { font-weight: 600; font-size: 14px; color: #475569; margin-bottom: 12px; display: block; }
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+        .filter-btn {
+            border: 1px solid transparent; padding: 10px 18px; border-radius: 50px; font-family: 'Prompt', sans-serif;
+            font-size: 13.5px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;
+        }
+        .filter-count { padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 600; transition: all 0.25s ease; }
 
-/* Loader */
-#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s;}
-#loader.hide{opacity:0;pointer-events:none;}
-.spinner{width:48px;height:48px;border:4px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
+        .filter-btn[data-filter="all"] { background-color: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+        .filter-btn[data-filter="all"] .filter-count { background-color: #cbd5e1; color: #1e293b; }
+        .filter-btn[data-filter="100"] { background-color: #e0f2fe; border-color: #bae6fd; color: #0369a1; }
+        .filter-btn[data-filter="100"] .filter-count { background-color: #bae6fd; color: #0369a1; }
+        .filter-btn[data-filter="95-99"] { background-color: #d1fae5; border-color: #a7f3d0; color: #047857; }
+        .filter-btn[data-filter="95-99"] .filter-count { background-color: #a7f3d0; color: #047857; }
+        .filter-btn[data-filter="90-94"] { background-color: #ecfccb; border-color: #d9f99d; color: #4d7c0f; }
+        .filter-btn[data-filter="90-94"] .filter-count { background-color: #d9f99d; color: #4d7c0f; }
+        .filter-btn[data-filter="85-89"] { background-color: #ffedd5; border-color: #fdba74; color: #c2410c; }
+        .filter-btn[data-filter="85-89"] .filter-count { background-color: #fdba74; color: #c2410c; }
+        .filter-btn[data-filter="<85"] { background-color: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+        .filter-btn[data-filter="<85"] .filter-count { background-color: #fecaca; color: #b91c1c; }
+        .filter-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-/* Nav */
-.nav{position:sticky;top:0;z-index:100;background:rgba(15,23,42,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:0 24px;}
-.nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:8px;overflow-x:auto;padding:8px 0;}
-.nav a{color:var(--fg2);text-decoration:none;padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:500;white-space:nowrap;transition:all .2s;}
-.nav a:hover,.nav a.active{color:var(--blue);background:rgba(59,130,246,.1);}
+        .filter-btn.active[data-filter="all"] { background-color: #334155; border-color: #334155; color: white; }
+        .filter-btn.active[data-filter="100"] { background-color: #0284c7; border-color: #0284c7; color: white; } 
+        .filter-btn.active[data-filter="95-99"] { background-color: #065f46; border-color: #065f46; color: white; } 
+        .filter-btn.active[data-filter="90-94"] { background-color: #65a30d; border-color: #65a30d; color: white; } 
+        .filter-btn.active[data-filter="85-89"] { background-color: #ea580c; border-color: #ea580c; color: white; } 
+        .filter-btn.active[data-filter="<85"] { background-color: #dc2626; border-color: #dc2626; color: white; } 
+        .filter-btn.active .filter-count { background-color: rgba(255, 255, 255, 0.25) !important; color: white !important; }
 
-/* Header */
-.header{text-align:center;padding:32px 0 24px;position:relative;}
-.header::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120px;height:3px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:2px;}
-.header h1{font-size:2.4rem;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;line-height:1.3;}
-.header .sub{color:var(--fg);font-size:1.2rem;font-weight:600;margin-top:6px;}
-.badge{display:inline-block;margin-top:14px;padding:6px 20px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:999px;font-size:0.9rem;font-weight:600;color:var(--blue);}
+        /* การ์ด KPI */
+        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+        .kpi-card.bg-blue { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe; }
+        .kpi-card.bg-blue .kpi-icon { color: #2563eb; } .kpi-card.bg-blue .kpi-title { color: #3b82f6; } .kpi-card.bg-blue .kpi-value { color: #1e3a8a; }
+        .kpi-card.bg-green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #a7f3d0; }
+        .kpi-card.bg-green .kpi-icon { color: #059669; } .kpi-card.bg-green .kpi-title { color: #10b981; } .kpi-card.bg-green .kpi-value { color: #064e3b; }
+        .kpi-card.bg-yellow { background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%); border-color: #fde047; }
+        .kpi-card.bg-yellow .kpi-icon { color: #d97706; } .kpi-card.bg-yellow .kpi-title { color: #ca8a04; } .kpi-card.bg-yellow .kpi-value { color: #713f12; }
+        .kpi-icon { font-size: 28px; margin-bottom: 5px; } .kpi-title { font-size: 15px; font-weight: 600; } .kpi-value { font-size: 40px; font-weight: 700; margin-top: 5px; }
 
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:32px 0;}
-.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;}
-.kpi:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(0,0,0,.4);}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.kpi:nth-child(1)::before{background:linear-gradient(135deg,var(--blue),var(--cyan));}
-.kpi:nth-child(2)::before{background:linear-gradient(135deg,var(--green),var(--cyan));}
-.kpi:nth-child(3)::before{background:linear-gradient(135deg,var(--amber),#f97316);}
-.kpi:nth-child(4)::before{background:linear-gradient(135deg,var(--purple),#ec4899);}
-.kpi:nth-child(5)::before{background:linear-gradient(135deg,var(--red),#f97316);}
-.kpi-label{font-size:.85rem;color:var(--fg2);margin-bottom:8px;font-weight:500;}
-.kpi-val{font-size:2rem;font-weight:700;line-height:1.2;}
-.kpi:nth-child(1) .kpi-val{color:var(--blue);}
-.kpi:nth-child(2) .kpi-val{color:var(--green);}
-.kpi:nth-child(3) .kpi-val{color:var(--amber);}
-.kpi:nth-child(4) .kpi-val{color:var(--purple);}
-.kpi:nth-child(5) .kpi-val{color:var(--red);}
-.kpi-sub{font-size:.8rem;color:var(--fg3);margin-top:4px;}
-.pbar{width:100%;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:4px;}
-.pfill{height:100%;border-radius:4px;transition:width 1.5s ease;}
+        /* ส่วนของกราฟ */
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .chart-card { background: #ffffff; padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; height: 400px; position: relative; }
+        .chart-card h3 { margin: 0 0 15px 0; font-size: 16px; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .canvas-container { position: relative; height: 320px; width: 100%; }
 
-/* Cards */
-.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;margin:24px 0;}
-.card h3{font-size:1.1rem;font-weight:600;margin-bottom:16px;}
-.chart-box{position:relative;width:100%;height:400px;}
+        /* ส่วนแสดงรายชื่ออำเภอ */
+        .insights-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .insight-card { padding: 25px; border-radius: 20px; color: white; position: relative; overflow: hidden; }
+        .insight-card.success { background: linear-gradient(135deg, #10b981 0%, #047857 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); border: 2px solid #34d399; }
+        .insight-card.warning { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 15px 30px -5px rgba(239, 68, 68, 0.4); border: 2px solid #f87171; }
+        .insight-card h3 { margin: 0 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(255, 255, 255, 0.2); padding-bottom: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .pill-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .pill { padding: 8px 16px; border-radius: 50px; font-size: 14.5px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .pill:hover { transform: translateY(-2px); }
+        .pill.success { background-color: #ffffff; color: #047857; }
+        .pill.warning { background-color: #ffffff; color: #b91c1c; }
+        .no-data { font-size: 14.5px; color: rgba(255,255,255,0.8); font-style: italic; }
+        
+        /* ส่วนของตารางข้อมูล และ Pagination */
+        .table-container { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+        .table-wrapper { overflow-x: auto; max-height: 800px; -webkit-overflow-scrolling: touch; } /* ให้คอมพิวเตอร์สไลด์ลงไปได้เยอะๆ */
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px; } 
+        th { background: #1e293b; color: #f8fafc; padding: 14px 16px; font-weight: 500; font-size: 14px; position: sticky; top: 0; z-index: 10; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { background: #334155; }
+        .sort-icon { font-size: 11px; margin-left: 4px; color: #94a3b8; display: inline-block; }
+        th.sortable.active .sort-icon { color: #f8fafc; font-weight: 700; }
+        td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 13.5px; white-space: nowrap; } /* เพิ่ม nowrap ให้เหมาะกับมือถือ */
+        tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .badge { padding: 4px 10px; border-radius: 50px; font-size: 12px; font-weight: 600; display: inline-block; text-align: center; min-width: 55px; }
+        .badge.excellent { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge.good { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .badge.average { background-color: #ecfccb; color: #4d7c0f; border: 1px solid #d9f99d; }
+        .badge.warning { background-color: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+        .badge.bad { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
 
-/* Tabs */
-.tabs{display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:12px;width:fit-content;}
-.tab{padding:8px 20px;border:none;background:transparent;color:var(--fg2);font-family:'Noto Sans Thai',sans-serif;font-size:.9rem;font-weight:500;border-radius:8px;cursor:pointer;transition:all .2s;}
-.tab.active{background:var(--blue);color:#fff;}
-.tab:hover:not(.active){background:var(--bg3);color:var(--fg);}
+        /* การแบ่งหน้า (Pagination) */
+        .pagination-container {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: #f8fafc; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 15px;
+        }
+        .page-info { font-size: 14px; color: #64748b; font-weight: 500; }
+        .page-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .page-btn {
+            padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 8px;
+            cursor: pointer; color: #334155; font-family: 'Prompt', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; }
+        .page-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Table */
-.tbl-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
-.search{padding:8px 16px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);color:var(--fg);font-family:'Noto Sans Thai',sans-serif;font-size:.9rem;width:260px;outline:none;transition:border-color .2s;}
-.search:focus{border-color:var(--blue);}
-.btn{padding:8px 16px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);color:var(--fg2);font-family:'Noto Sans Thai',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
-.btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.1);}
-.twrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:.9rem;}
-thead th{background:var(--bg);color:var(--fg2);font-weight:600;padding:12px 16px;text-align:center;white-space:nowrap;position:sticky;top:0;cursor:pointer;user-select:none;transition:color .2s;}
-thead th:hover{color:var(--blue);}
-thead th.sa::after{content:' ▲';font-size:.7em;}
-thead th.sd::after{content:' ▼';font-size:.7em;}
-tbody td{padding:10px 16px;border-bottom:1px solid var(--bdr);text-align:center;white-space:nowrap;}
-tbody td:nth-child(2){text-align:left;}
-tbody tr{transition:background .15s;}
-tbody tr:hover{background:var(--bg3);}
-tbody tr.mu{background:rgba(59,130,246,.08);font-weight:600;}
-.pct-b{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.8rem;font-weight:600;}
-.ph{background:rgba(16,185,129,.15);color:#10b981;}
-.pm{background:rgba(245,158,11,.15);color:#f59e0b;}
-.pl{background:rgba(239,68,68,.15);color:#ef4444;}
-.eb{background:none;border:1px solid var(--bdr);color:var(--fg2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;}
-.eb:hover{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.1);}
-.eb.ex{background:var(--blue);color:#fff;border-color:var(--blue);}
-.sr{display:none;}
-.sr.show{display:table-row;}
-.sr td{background:rgba(0,0,0,.15);font-size:.85rem;padding:6px 16px;color:var(--fg2);}
-.sr td:nth-child(2){padding-left:36px;}
-
-/* District Analysis */
-.da-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
-.da-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0;}
-.da-kpi-card{background:var(--bg);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--bdr);box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);}
-.da-kpi-card .val{font-size:1.6rem;font-weight:700;}
-.da-kpi-card .lbl{font-size:.75rem;color:var(--fg3);margin-top:4px;}
-
-/* Responsive District Grid */
-.da-district-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
-  margin: 16px 0 24px 0;
-}
-.da-grid-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 48px;
-  box-sizing: border-box;
-}
-.da-grid-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--blue);
-  background: rgba(30, 41, 59, 0.8);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
-}
-.da-grid-card.active {
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-}
-.dg-name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-  margin-bottom: 0 !important;
-  flex-grow: 1;
-  transition: color 0.2s;
-}
-.da-grid-card:hover .dg-name {
-  color: var(--fg);
-}
-.da-grid-card.active .dg-name {
-  color: #fff !important;
-  font-weight: 700;
-}
-.dg-pct {
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-.da-grid-card.active .dg-pct {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: #fff !important;
-}
-
-@media(max-width: 991px) {
-  .da-district-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-@media(max-width: 480px) {
-  .da-district-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-/* Dynamic District Banner */
-.selected-district-banner {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.04));
-  border-left: 5px solid var(--blue);
-  padding: 18px 24px;
-  border-radius: 12px;
-  margin: 16px 0 24px 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-left: 5px solid var(--blue);
-  animation: fadeIn 0.4s ease-out;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.banner-badge {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--cyan);
-  font-weight: 700;
-  display: block;
-  margin-bottom: 4px;
-}
-.banner-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--fg);
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
-}
-
-/* Scroll top */
-#scrollTop{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:1.2rem;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(59,130,246,.4);transition:all .3s;z-index:90;}
-#scrollTop:hover{transform:scale(1.1);}
-#scrollTop.show{display:flex;}
-
-/* Footer */
-.footer{text-align:center;padding:32px 0 16px;color:var(--fg3);font-size:.8rem;}
-
-@media(max-width:768px){
-.container{padding:12px;}
-.header h1{font-size:1.6rem;}
-.kpi-grid{grid-template-columns:repeat(2,1fr);}
-.kpi-val{font-size:1.5rem;}
-.chart-box{height:300px;}
-.search{width:100%;}
-.da-grid{grid-template-columns:1fr;}
-.sel{min-width:100%;}
-.da-grid-card {
-  height: 44px !important;
-  padding: 8px 10px !important;
-}
-.dg-name {
-  font-size: 0.9rem !important;
-}
-.dg-pct {
-  font-size: 0.78rem !important;
-  padding: 2px 6px !important;
-}
-}
-@media(max-width:480px){
-.kpi-grid{grid-template-columns:1fr;}
-.da-grid-card {
-  height: 40px !important;
-  padding: 6px 8px !important;
-}
-.dg-name {
-  font-size: 0.8rem !important;
-}
-.dg-pct {
-  font-size: 0.7rem !important;
-  padding: 1px 4px !important;
-}
-}
-</style>
+        /* Responsive มือถือ */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .btn-download { width: 100%; text-align: center; padding: 12px; }
+            .controls { padding: 15px; gap: 12px; }
+            .filter-section { padding: 15px; }
+            .filter-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .filter-btn { padding: 10px; justify-content: space-between; font-size: 12px; }
+            .kpi-container { grid-template-columns: 1fr; gap: 12px; }
+            .charts-container { grid-template-columns: 1fr; }
+            .insight-card { padding: 20px; }
+            .insight-card h3 { font-size: 18px; }
+            .table-wrapper { max-height: 60vh; } /* จำกัดความสูงตารางในมือถือ ให้มองเห็นปุ่มเปลี่ยนหน้าได้ */
+            .pagination-container { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div></div>
-
-<nav class="nav" id="nav-bar">
-<div class="nav-inner">
-<a href="#district-selector">🔍 เลือกพื้นที่</a>
-<a href="#kpi-section">📊 สรุปผลงาน</a>
-<a href="#charts-section">📈 กราฟวิเคราะห์</a>
-<a href="#table-section">📋 ตารางข้อมูล</a>
-<div class="theme-selector">
-  <button class="theme-btn tb-dark active" data-theme="dark" onclick="setTheme('dark')" title="ธีมมืด (Dark)"></button>
-  <button class="theme-btn tb-light" data-theme="light" onclick="setTheme('light')" title="ธีมสว่าง (Light)"></button>
-  <button class="theme-btn tb-blue" data-theme="blue" onclick="setTheme('blue')" title="ธีมสีฟ้า (Ocean)"></button>
-  <button class="theme-btn tb-emerald" data-theme="emerald" onclick="setTheme('emerald')" title="ธีมเขียวมรกต (Emerald)"></button>
-</div>
-</div>
-</nav>
-
-<div class="container">
-<header class="header">
-<h1>💉 ผลงานฉีดวัคซีนไข้หวัดใหญ่ตามฤดูกาลของประชาชนกลุ่มเสี่ยง ปี 2569</h1>
-<p class="sub">จังหวัดกาฬสินธุ์ · เขตสุขภาพที่ 7</p>
-<span class="badge">🕐 อัพเดท: 29/05/2026 12:50 น.</span>
-</header>
-
-<div class="card" id="district-selector" style="margin-top: 0;">
-<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-<div>
-<h3 style="margin-bottom:4px;">🔍 เลือกพื้นที่ที่ต้องการดูข้อมูล</h3>
-<p style="color:var(--fg3);font-size:0.85rem;">คลิกเลือกปุ่มภาพรวมจังหวัด หรือรายอำเภอในตาราง Grid ด้านล่าง เพื่อดูข้อมูลของพื้นที่นั้น</p>
-</div>
-<button class="btn" onclick="exportCSV('district')">📥 ส่งออก CSV ข้อมูลที่เลือก</button>
-</div>
-
-<div style="display:flex;justify-content:center;margin-bottom:16px;">
-  <div class="da-grid-card active" id="dg-ภาพรวมจังหวัด" onclick="selectDistrictCard('ภาพรวมจังหวัด')" style="width: 100%; max-width: 340px; justify-content: center; gap: 12px; height: 48px;">
-    <div class="dg-name" style="flex-grow:0; font-size: 1.15rem; font-weight: 700;">📍 ภาพรวมทั้งจังหวัด</div>
-    <div class="dg-pct ph" style="font-size: 0.95rem; padding: 4px 12px;">12.8%</div>
-  </div>
-</div>
-
-<div class="da-district-grid" id="daDistrictGrid">
-<div class="da-grid-card" id="dg-นาคู" onclick="selectDistrictCard('นาคู')"><div class="dg-name">นาคู</div><div class="dg-pct pl">21.9%</div></div>
-<div class="da-grid-card" id="dg-เขาวง" onclick="selectDistrictCard('เขาวง')"><div class="dg-name">เขาวง</div><div class="dg-pct pl">20.1%</div></div>
-<div class="da-grid-card" id="dg-ดอนจาน" onclick="selectDistrictCard('ดอนจาน')"><div class="dg-name">ดอนจาน</div><div class="dg-pct pl">19.3%</div></div>
-<div class="da-grid-card" id="dg-ฆ้องชัย" onclick="selectDistrictCard('ฆ้องชัย')"><div class="dg-name">ฆ้องชัย</div><div class="dg-pct pl">19.1%</div></div>
-<div class="da-grid-card" id="dg-ยางตลาด" onclick="selectDistrictCard('ยางตลาด')"><div class="dg-name">ยางตลาด</div><div class="dg-pct pl">18.9%</div></div>
-<div class="da-grid-card" id="dg-ห้วยผึ้ง" onclick="selectDistrictCard('ห้วยผึ้ง')"><div class="dg-name">ห้วยผึ้ง</div><div class="dg-pct pl">18.7%</div></div>
-<div class="da-grid-card" id="dg-สมเด็จ" onclick="selectDistrictCard('สมเด็จ')"><div class="dg-name">สมเด็จ</div><div class="dg-pct pl">15.7%</div></div>
-<div class="da-grid-card" id="dg-ห้วยเม็ก" onclick="selectDistrictCard('ห้วยเม็ก')"><div class="dg-name">ห้วยเม็ก</div><div class="dg-pct pl">15.5%</div></div>
-<div class="da-grid-card" id="dg-กุฉินารายณ์" onclick="selectDistrictCard('กุฉินารายณ์')"><div class="dg-name">กุฉินารายณ์</div><div class="dg-pct pl">14.7%</div></div>
-<div class="da-grid-card" id="dg-ท่าคันโท" onclick="selectDistrictCard('ท่าคันโท')"><div class="dg-name">ท่าคันโท</div><div class="dg-pct pl">12.4%</div></div>
-<div class="da-grid-card" id="dg-หนองกุงศรี" onclick="selectDistrictCard('หนองกุงศรี')"><div class="dg-name">หนองกุงศรี</div><div class="dg-pct pl">12.1%</div></div>
-<div class="da-grid-card" id="dg-สหัสขันธ์" onclick="selectDistrictCard('สหัสขันธ์')"><div class="dg-name">สหัสขันธ์</div><div class="dg-pct pl">11.5%</div></div>
-<div class="da-grid-card" id="dg-คำม่วง" onclick="selectDistrictCard('คำม่วง')"><div class="dg-name">คำม่วง</div><div class="dg-pct pl">10.4%</div></div>
-<div class="da-grid-card" id="dg-นามน" onclick="selectDistrictCard('นามน')"><div class="dg-name">นามน</div><div class="dg-pct pl">10.3%</div></div>
-<div class="da-grid-card" id="dg-ร่องคำ" onclick="selectDistrictCard('ร่องคำ')"><div class="dg-name">ร่องคำ</div><div class="dg-pct pl">10.3%</div></div>
-<div class="da-grid-card" id="dg-กมลาไสย" onclick="selectDistrictCard('กมลาไสย')"><div class="dg-name">กมลาไสย</div><div class="dg-pct pl">7.3%</div></div>
-<div class="da-grid-card" id="dg-เมืองกาฬสินธุ์" onclick="selectDistrictCard('เมืองกาฬสินธุ์')"><div class="dg-name">เมืองกาฬสินธุ์</div><div class="dg-pct pl">4.3%</div></div>
-<div class="da-grid-card" id="dg-สามชัย" onclick="selectDistrictCard('สามชัย')"><div class="dg-name">สามชัย</div><div class="dg-pct pl">0.0%</div></div>
-</div>
-</div>
-
-<div class="selected-district-banner" id="daDistrictBanner">
-<span class="banner-badge">📍 พื้นที่รายงานข้อมูล</span>
-<h2 class="banner-title" id="daDistrictName">ภาพรวมจังหวัดกาฬสินธุ์</h2>
-</div>
-
-<div class="kpi-grid" id="kpi-section">
-<div class="kpi"><div class="kpi-label">🎯 เป้าหมายรวม</div><div class="kpi-val" id="kpi-tt" data-count="0">0</div><div class="kpi-sub" id="kpi-sub-t">V11: 0 · V12: 0</div></div>
-<div class="kpi"><div class="kpi-label">💉 ฉีดแล้ว</div><div class="kpi-val" id="kpi-tv" data-count="0">0</div><div class="kpi-sub" id="kpi-sub-v">V11: 0 · V12: 0</div></div>
-<div class="kpi"><div class="kpi-label">📊 ร้อยละผลงาน</div><div class="kpi-val" id="kpi-pct" data-count="0" data-suffix="%">0%</div><div class="pbar"><div class="pfill" id="kpi-pfill" style="width:0%;"></div></div></div>
-<div class="kpi"><div class="kpi-label" id="kpi-lbl-units">🏥 อำเภอ</div><div class="kpi-val" id="kpi-units" data-count="0">0</div><div class="kpi-sub" id="kpi-sub-units">อำเภอ</div></div>
-<div class="kpi"><div class="kpi-label" id="kpi-lbl-total-units">🏠 หน่วยบริการ</div><div class="kpi-val" id="kpi-total-units" data-count="0">0</div><div class="kpi-sub" id="kpi-sub-total-units">แม่ข่าย+ลูกข่าย</div></div>
-</div>
-
-<div id="charts-section">
-  <div id="provincial-charts">
-    <div class="card" id="bar-chart-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-    <h3>📊 เปรียบเทียบผลงานรายอำเภอ</h3>
-    <div class="tabs"><button class="tab active" onclick="swChart('v11')" id="tv11">V11 (7กลุ่มเสี่ยง)</button><button class="tab" onclick="swChart('v12')" id="tv12">V12 (กลุ่มพิเศษ)</button><button class="tab" onclick="swChart('total')" id="ttot">รวม</button></div>
-    </div>
-    <div class="chart-box"><canvas id="barChart"></canvas></div>
+<div class="dashboard-container">
+    <div class="header">
+        <div>
+            <h1>📊 แดชบอร์ดความครอบคลุมวัคซีน MMR2</h1>
+            <p>จังหวัดกาฬสินธุ์ | ไตรมาสที่ 1-2 (ข้อมูล ณ วันที่ 16 พฤษภาคม 2569)</p>
+        </div>
+        <button class="btn-download" onclick="exportTableToCSV('MMR2_Dashboard_Data.csv')">
+            📥 ดาวน์โหลดตาราง (CSV)
+        </button>
     </div>
 
-    <div class="card" id="pct-chart-card">
-    <h3>📈 ร้อยละผลงานรายอำเภอ (เรียงจากมากไปน้อย)</h3>
-    <div class="chart-box"><canvas id="pctChart"></canvas></div>
+    <div class="controls">
+        <div class="control-group">
+            <label for="districtSelect">📍 กรองตามอำเภอ</label>
+            <select id="districtSelect">
+                <option value="ทั้งหมด">-- ทุกอำเภอ --</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="agencySelect">🏢 กรองตามสังกัด</label>
+            <select id="agencySelect">
+                <option value="ทั้งหมด">-- ทุกสังกัด --</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="unitSelect">🏥 กรองตามหน่วยบริการ</label>
+            <select id="unitSelect">
+                <option value="ทั้งหมด">-- ทุกหน่วยบริการ --</option>
+            </select>
+        </div>
     </div>
-  </div>
 
-  <div id="district-charts" style="display:none;">
-    <div class="da-grid">
-    <div class="card" style="margin:0;background:var(--bg);border-color:var(--bdr);"><h3>📊 สัดส่วนผลงาน</h3><div style="max-width:300px;margin:0 auto;"><canvas id="daDoughnut"></canvas></div></div>
-    <div class="card" style="margin:0;background:var(--bg);border-color:var(--bdr);"><h3>📊 ผลงานรายหน่วยบริการ</h3><div class="chart-box" style="height:350px;"><canvas id="daBar"></canvas></div></div>
+    <div class="filter-section">
+        <span class="filter-section-title">📈 กรองตามระดับผลงานร้อยละ</span>
+        <div class="filter-buttons" id="filterButtonGroup">
+            <button class="filter-btn active" data-filter="all">ทั้งหมด <span class="filter-count" id="count-all">0</span></button>
+            <button class="filter-btn" data-filter="100">100% (สูงสุด) <span class="filter-count" id="count-100">0</span></button>
+            <button class="filter-btn" data-filter="95-99">≥ 95% (ผ่านเกณฑ์) <span class="filter-count" id="count-95-99">0</span></button>
+            <button class="filter-btn" data-filter="90-94">90–94% (ผลงานดี) <span class="filter-count" id="count-90-94">0</span></button>
+            <button class="filter-btn" data-filter="85-89">85–89% (เฝ้าระวัง) <span class="filter-count" id="count-85-89">0</span></button>
+            <button class="filter-btn" data-filter="<85">< 85% (เร่งด่วน) <span class="filter-count" id="count-lt85">0</span></button>
+        </div>
     </div>
-  </div>
-</div>
 
-<div class="card" id="table-section"><div class="card" id="table-section">
-<div class="tbl-header">
-<h3 id="table-section-title">📋 สรุปรายเครือข่าย (คลิก + ขยายดูรายหน่วยบริการ)</h3>
-<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-<input type="text" class="search" placeholder="🔍 ค้นหาอำเภอ / หน่วยบริการ..." oninput="filterTbl(this.value)">
-<button class="btn" onclick="exportCSV('summary')">📥 ส่งออก CSV</button>
-</div>
-</div>
-<div class="twrap">
-<table id="dtbl"><thead><tr>
-<th></th><th onclick="srt(1)">อำเภอ</th><th onclick="srt(2)">เครือข่าย</th><th onclick="srt(3)">ลูกข่าย</th><th onclick="srt(4)">เป้าหมาย</th><th onclick="srt(5)">ฉีดแล้ว</th><th onclick="srt(6)">% ผลงาน</th>
-</tr></thead><tbody id="tbody"></tbody></table>
-</div>
-</div>
+    <div class="kpi-container">
+        <div class="kpi-card bg-blue">
+            <div class="kpi-icon">🎯</div>
+            <div class="kpi-title">เป้าหมายทั้งหมด (คน)</div>
+            <div class="kpi-value" id="kpiTarget">0</div>
+        </div>
+        <div class="kpi-card bg-green">
+            <div class="kpi-icon">💉</div>
+            <div class="kpi-title">ได้รับวัคซีน MMR2 (คน)</div>
+            <div class="kpi-value" id="kpiMmr2">0</div>
+        </div>
+        <div class="kpi-card bg-yellow">
+            <div class="kpi-icon">📈</div>
+            <div class="kpi-title">ร้อยละความครอบคลุม (%)</div>
+            <div class="kpi-value" id="kpiPercent">0.00%</div>
+        </div>
+    </div>
 
-<footer class="footer">
-<p>ข้อมูลจากระบบรายงาน สปสช. เขต 7 · จัดทำโดยระบบอัตโนมัติ</p>
-<p style="margin-top:4px;">อัพเดทล่าสุด: 29/05/2026 12:50 น.</p>
-</footer>
-</div>
+    <div class="charts-container">
+        <div class="chart-card">
+            <h3 id="mainChartTitle">📊 กราฟแท่งผลงานรายอำเภอ</h3>
+            <div class="canvas-container">
+                <canvas id="districtChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>🏢 กราฟแท่งเปรียบเทียบสังกัด</h3>
+            <div class="canvas-container">
+                <canvas id="agencyChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-<button id="scrollTop" onclick="window.scrollTo(0,0)">↑</button>
+    <div class="insights-container">
+        <div class="insight-card success">
+            <h3 id="insightTitle100">🌟 รายชื่ออำเภอที่ได้ 100%</h3>
+            <div class="pill-list" id="districts100List"></div>
+        </div>
+        <div class="insight-card warning">
+            <h3 id="insightTitleUnder90">⚠️ รายชื่ออำเภอที่ได้น้อยกว่า 90%</h3>
+            <div class="pill-list" id="districtsUnder90List"></div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th width="15%" class="sortable" data-col="district">อำเภอ <span class="sort-icon">⇅</span></th>
+                        <th width="30%" class="sortable" data-col="unit">หน่วยบริการ <span class="sort-icon">⇅</span></th>
+                        <th width="25%" class="sortable" data-col="agency">สังกัด <span class="sort-icon">⇅</span></th>
+                        <th width="10%" class="sortable" data-col="target">เป้าหมาย <span class="sort-icon">⇅</span></th>
+                        <th width="10%" class="sortable" data-col="mmr2">MMR2 <span class="sort-icon">⇅</span></th>
+                        <th width="10%" class="sortable active" data-col="percent">ร้อยละ <span class="sort-icon">▼</span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+        <div class="pagination-container" id="paginationControls">
+            </div>
+    </div>
+</div>
 
 <script>
-try{Chart.register(ChartDataLabels);}catch(e){console.warn('ChartDataLabels not loaded',e);}
-const DL=["เมืองกาฬสินธุ์", "นามน", "กมลาไสย", "ร่องคำ", "เขาวง", "ยางตลาด", "ห้วยเม็ก", "สหัสขันธ์", "คำม่วง", "ท่าคันโท", "หนองกุงศรี", "สมเด็จ", "ห้วยผึ้ง", "กุฉินารายณ์", "นาคู", "ฆ้องชัย", "ดอนจาน", "สามชัย"];
-const V11T=[12000, 3800, 9300, 3000, 4000, 10740, 4200, 4800, 6000, 2500, 2400, 5970, 4300, 10000, 6200, 3600, 2750, 2550];
-const V11V=[720, 391, 683, 308, 806, 2029, 652, 552, 627, 311, 290, 935, 805, 1467, 1356, 688, 530, 0];
-const V12T=[4560, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const V12V=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const DPCT=[4.35, 10.29, 7.34, 10.27, 20.15, 18.89, 15.52, 11.5, 10.45, 12.44, 12.08, 15.66, 18.72, 14.67, 21.87, 19.11, 19.27, 0.0];
-const SL=["นาคู", "เขาวง", "ดอนจาน", "ฆ้องชัย", "ยางตลาด", "ห้วยผึ้ง", "สมเด็จ", "ห้วยเม็ก", "กุฉินารายณ์", "ท่าคันโท", "หนองกุงศรี", "สหัสขันธ์", "คำม่วง", "นามน", "ร่องคำ", "กมลาไสย", "เมืองกาฬสินธุ์", "สามชัย"];
-const SP=[21.87, 20.15, 19.27, 19.11, 18.89, 18.72, 15.66, 15.52, 14.67, 12.44, 12.08, 11.5, 10.45, 10.29, 10.27, 7.34, 4.35, 0.0];
-const ND=[{"nc": "10709", "district": "เมืองกาฬสินธุ์", "mn": "รพ.กาฬสินธุ์", "sc": 25, "v11t": 12000, "v11v": 720, "v12t": 4560, "v12v": 0, "tt": 16560, "tv": 720, "pct": 4.35, "units": [{"code": "10709", "name": "รพ.กาฬสินธุ์", "type": "แม่ข่าย", "v11t": 3160, "v11v": 75, "v12t": 0, "v12v": 0, "tt": 3160, "tv": 75, "pct": 2.37}, {"code": "05291", "name": "รพ.สต.บ้านต้อน", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05292", "name": "รพ.สต.โนนสว่าง", "type": "ลูกข่าย", "v11t": 750, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 750, "tv": 0, "pct": 0.0}, {"code": "05293", "name": "รพ.สต.บ้านหนองโพน", "type": "ลูกข่าย", "v11t": 350, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 350, "tv": 0, "pct": 0.0}, {"code": "05294", "name": "รพ.สต.บ้านหนองสอ", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05295", "name": "รพ.สต.บ้านสะอาดนาทม", "type": "ลูกข่าย", "v11t": 200, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 200, "tv": 0, "pct": 0.0}, {"code": "05296", "name": "รพ.สต.บ้านฝายแตก", "type": "ลูกข่าย", "v11t": 300, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 300, "tv": 0, "pct": 0.0}, {"code": "05297", "name": "รพ.สต.บ้านโนนแพง", "type": "ลูกข่าย", "v11t": 250, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 250, "tv": 0, "pct": 0.0}, {"code": "05298", "name": "รพ.สต.บ้านเชียงเครือ", "type": "ลูกข่าย", "v11t": 200, "v11v": 96, "v12t": 0, "v12v": 0, "tt": 200, "tv": 96, "pct": 48.0}, {"code": "05299", "name": "รพ.สต.บ้านแกเปะ", "type": "ลูกข่าย", "v11t": 250, "v11v": 98, "v12t": 0, "v12v": 0, "tt": 250, "tv": 98, "pct": 39.2}, {"code": "05300", "name": "รพ.สต.บ้านท่าไคร้", "type": "ลูกข่าย", "v11t": 300, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 300, "tv": 0, "pct": 0.0}, {"code": "05301", "name": "รพ.สต.บ้านดงสว่าง", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05302", "name": "รพ.สต.บ้านหนองแวงใหญ่", "type": "ลูกข่าย", "v11t": 350, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 350, "tv": 0, "pct": 0.0}, {"code": "05303", "name": "รพ.สต.บ้านเหล่าหลวง", "type": "ลูกข่าย", "v11t": 300, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 300, "tv": 0, "pct": 0.0}, {"code": "05304", "name": "รพ.สต.บ้านคำไผ่", "type": "ลูกข่าย", "v11t": 350, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 350, "tv": 0, "pct": 0.0}, {"code": "05305", "name": "รพ.สต.บ้านเหล่ากลาง", "type": "ลูกข่าย", "v11t": 150, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 150, "tv": 0, "pct": 0.0}, {"code": "05306", "name": "รพ.สต.บ้านน้ำบุ่น", "type": "ลูกข่าย", "v11t": 230, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 230, "tv": 0, "pct": 0.0}, {"code": "05307", "name": "รพ.สต.บ้านหนองแวงใต้", "type": "ลูกข่าย", "v11t": 300, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 300, "tv": 0, "pct": 0.0}, {"code": "05308", "name": "รพ.สต.โนนชัย", "type": "ลูกข่าย", "v11t": 150, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 150, "tv": 0, "pct": 0.0}, {"code": "05309", "name": "รพ.สต.บ้านโพนทอง", "type": "ลูกข่าย", "v11t": 300, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 300, "tv": 0, "pct": 0.0}, {"code": "05310", "name": "รพ.สต.บ้านนาจารย์", "type": "ลูกข่าย", "v11t": 550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 550, "tv": 0, "pct": 0.0}, {"code": "13963", "name": "รพ.สต.บ้านดงเมือง", "type": "ลูกข่าย", "v11t": 160, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 160, "tv": 0, "pct": 0.0}, {"code": "14347", "name": "ศูนย์บริการสาธารณสุขเทศบาลกาฬสินธุ์แห่งที่ 1 (ซอยน้ำทิพย์)", "type": "ลูกข่าย", "v11t": 400, "v11v": 106, "v12t": 0, "v12v": 0, "tt": 400, "tv": 106, "pct": 26.5}, {"code": "22776", "name": "สถานพยาบาลเรือนจำจังหวัดกาฬสินธุ์", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 4560, "v12v": 0, "tt": 4560, "tv": 0, "pct": 0.0}, {"code": "24743", "name": "ศูนย์บริการสาธารณสุขเทศบาลเมืองกาฬสินธุแห่งที่ 2 (ดงปอ)", "type": "ลูกข่าย", "v11t": 400, "v11v": 143, "v12t": 0, "v12v": 0, "tt": 400, "tv": 143, "pct": 35.75}, {"code": "77738", "name": "ศสช.เมืองโรงพยาบาลกาฬสินธุ์", "type": "ลูกข่าย", "v11t": 1000, "v11v": 202, "v12t": 0, "v12v": 0, "tt": 1000, "tv": 202, "pct": 20.2}]}, {"nc": "11077", "district": "นามน", "mn": "รพ.นามน", "sc": 6, "v11t": 3800, "v11v": 391, "v12t": 0, "v12v": 0, "tt": 3800, "tv": 391, "pct": 10.29, "units": [{"code": "11077", "name": "รพ.นามน", "type": "แม่ข่าย", "v11t": 160, "v11v": 105, "v12t": 0, "v12v": 0, "tt": 160, "tv": 105, "pct": 65.62}, {"code": "05311", "name": "รพ.สต.บ้านโนนศรีสวัสดิ์", "type": "ลูกข่าย", "v11t": 100, "v11v": 1, "v12t": 0, "v12v": 0, "tt": 100, "tv": 1, "pct": 1.0}, {"code": "05312", "name": "รพ.สต.บ้านยอดแกง", "type": "ลูกข่าย", "v11t": 100, "v11v": 100, "v12t": 0, "v12v": 0, "tt": 100, "tv": 100, "pct": 100.0}, {"code": "05313", "name": "รพ.สต.บ้านหัวงัง (บ้านหัวงัว)", "type": "ลูกข่าย", "v11t": 100, "v11v": 85, "v12t": 0, "v12v": 0, "tt": 100, "tv": 85, "pct": 85.0}, {"code": "05314", "name": "รพ.สต.บ้านสงเปลื่อย", "type": "ลูกข่าย", "v11t": 100, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 100, "tv": 0, "pct": 0.0}, {"code": "05315", "name": "รพ.สต.บ้านอุทัยวรรณ", "type": "ลูกข่าย", "v11t": 100, "v11v": 96, "v12t": 0, "v12v": 0, "tt": 100, "tv": 96, "pct": 96.0}, {"code": "05316", "name": "รพ.สต.บ้านหนองบัวใน", "type": "ลูกข่าย", "v11t": 100, "v11v": 4, "v12t": 0, "v12v": 0, "tt": 100, "tv": 4, "pct": 4.0}]}, {"nc": "11078", "district": "กมลาไสย", "mn": "รพ.กมลาไสย", "sc": 10, "v11t": 9300, "v11v": 683, "v12t": 0, "v12v": 0, "tt": 9300, "tv": 683, "pct": 7.34, "units": [{"code": "11078", "name": "รพ.กมลาไสย", "type": "แม่ข่าย", "v11t": 2750, "v11v": 423, "v12t": 0, "v12v": 0, "tt": 2750, "tv": 423, "pct": 15.38}, {"code": "05317", "name": "รพ.สต.บ้านข้าวหลาม", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05318", "name": "รพ.สต.บ้านบึง", "type": "ลูกข่าย", "v11t": 650, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 650, "tv": 0, "pct": 0.0}, {"code": "05319", "name": "รพ.สต.เฉลิมพระเกียรติ 60 พรรษา นวมินทราชินี", "type": "ลูกข่าย", "v11t": 700, "v11v": 99, "v12t": 0, "v12v": 0, "tt": 700, "tv": 99, "pct": 14.14}, {"code": "05320", "name": "รพ.สต.สีถาน", "type": "ลูกข่าย", "v11t": 800, "v11v": 94, "v12t": 0, "v12v": 0, "tt": 800, "tv": 94, "pct": 11.75}, {"code": "05321", "name": "รพ.สต.บ้านบ่อ", "type": "ลูกข่าย", "v11t": 800, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 800, "tv": 0, "pct": 0.0}, {"code": "05326", "name": "รพ.สต.บ้านหนองแปน", "type": "ลูกข่าย", "v11t": 600, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 600, "tv": 0, "pct": 0.0}, {"code": "05329", "name": "รพ.สต.บ้านท่าเพลิง", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05330", "name": "รพ.สต.บ้านหนองบัว", "type": "ลูกข่าย", "v11t": 700, "v11v": 67, "v12t": 0, "v12v": 0, "tt": 700, "tv": 67, "pct": 9.57}, {"code": "05331", "name": "รพ.สต.บ้านนามล", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "13964", "name": "รพ.สต.บ้านสวนโคก", "type": "ลูกข่าย", "v11t": 600, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 600, "tv": 0, "pct": 0.0}]}, {"nc": "11079", "district": "ร่องคำ", "mn": "รพ.ร่องคำ", "sc": 2, "v11t": 3000, "v11v": 308, "v12t": 0, "v12v": 0, "tt": 3000, "tv": 308, "pct": 10.27, "units": [{"code": "11079", "name": "รพ.ร่องคำ", "type": "แม่ข่าย", "v11t": 1600, "v11v": 308, "v12t": 0, "v12v": 0, "tt": 1600, "tv": 308, "pct": 19.25}, {"code": "05333", "name": "รพ.สต.บ้านนาเรียง", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05334", "name": "รพ.สต.บ้านค้อพัฒนา", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}]}, {"nc": "11080", "district": "เขาวง", "mn": "รพ.เขาวง", "sc": 5, "v11t": 4000, "v11v": 806, "v12t": 0, "v12v": 0, "tt": 4000, "tv": 806, "pct": 20.15, "units": [{"code": "11080", "name": "รพ.เขาวง", "type": "แม่ข่าย", "v11t": 1700, "v11v": 806, "v12t": 0, "v12v": 0, "tt": 1700, "tv": 806, "pct": 47.41}, {"code": "05352", "name": "รพ.สต.บ้านกุดบอด", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05353", "name": "รพ.สต.บ้านนาตาหลิ่ว", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05354", "name": "รพ.สต.บ้านหนองผือ", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05355", "name": "รพ.สต.บ้านโพนสวาง", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05356", "name": "รพ.สต.บ้านส้มป่อย", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}]}, {"nc": "11081", "district": "ยางตลาด", "mn": "รพ.ยางตลาด", "sc": 17, "v11t": 10740, "v11v": 2029, "v12t": 0, "v12v": 0, "tt": 10740, "tv": 2029, "pct": 18.89, "units": [{"code": "11081", "name": "รพ.ยางตลาด", "type": "แม่ข่าย", "v11t": 1500, "v11v": 973, "v12t": 0, "v12v": 0, "tt": 1500, "tv": 973, "pct": 64.87}, {"code": "05357", "name": "รพ.สต.บ้านเสียว", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05358", "name": "รพ.สต.บ้านโคกศรี", "type": "ลูกข่าย", "v11t": 750, "v11v": 751, "v12t": 0, "v12v": 0, "tt": 750, "tv": 751, "pct": 100.13}, {"code": "05359", "name": "รพ.สต.บ้านตูม", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05360", "name": "รพ.สต.บ้านโคกใหญ่", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05361", "name": "รพ.สต.บ้านห้วยเตย", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05362", "name": "รพ.สต.บ้านแก", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05363", "name": "รพ.สต.บ้านหัวนาคำ", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05364", "name": "รพ.สต.บ้านดงบัง", "type": "ลูกข่าย", "v11t": 450, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 450, "tv": 0, "pct": 0.0}, {"code": "05365", "name": "รพ.สต.บ้านหนองอิเฒ่า", "type": "ลูกข่าย", "v11t": 400, "v11v": 305, "v12t": 0, "v12v": 0, "tt": 400, "tv": 305, "pct": 76.25}, {"code": "05366", "name": "รพ.สต.บ้านดอนยานาง", "type": "ลูกข่าย", "v11t": 600, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 600, "tv": 0, "pct": 0.0}, {"code": "05367", "name": "รพ.สต.บ้านนาเชือก", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05368", "name": "รพ.สต.บ้านขาม", "type": "ลูกข่าย", "v11t": 540, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 540, "tv": 0, "pct": 0.0}, {"code": "05369", "name": "รพ.สต.บ้านโคกศรี", "type": "ลูกข่าย", "v11t": 550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 550, "tv": 0, "pct": 0.0}, {"code": "05370", "name": "รพ.สต.พุทธรักษา", "type": "ลูกข่าย", "v11t": 550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 550, "tv": 0, "pct": 0.0}, {"code": "05371", "name": "รพ.สต.บ้านปอแดง", "type": "ลูกข่าย", "v11t": 550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 550, "tv": 0, "pct": 0.0}, {"code": "05372", "name": "รพ.สต.บ้านโนนสูง", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}, {"code": "05373", "name": "รพ.สต.บ้านหนองตอกแป้น", "type": "ลูกข่าย", "v11t": 450, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 450, "tv": 0, "pct": 0.0}]}, {"nc": "11082", "district": "ห้วยเม็ก", "mn": "รพ.ห้วยเม็ก", "sc": 9, "v11t": 4200, "v11v": 652, "v12t": 0, "v12v": 0, "tt": 4200, "tv": 652, "pct": 15.52, "units": [{"code": "11082", "name": "รพ.ห้วยเม็ก", "type": "แม่ข่าย", "v11t": 445, "v11v": 95, "v12t": 0, "v12v": 0, "tt": 445, "tv": 95, "pct": 21.35}, {"code": "05374", "name": "รพ.สต.บ้านคำใหญ่", "type": "ลูกข่าย", "v11t": 440, "v11v": 95, "v12t": 0, "v12v": 0, "tt": 440, "tv": 95, "pct": 21.59}, {"code": "05375", "name": "รพ.สต.บ้านกุดโดน", "type": "ลูกข่าย", "v11t": 445, "v11v": 95, "v12t": 0, "v12v": 0, "tt": 445, "tv": 95, "pct": 21.35}, {"code": "05376", "name": "รพ.สต.บ้านหนองบัว", "type": "ลูกข่าย", "v11t": 443, "v11v": 95, "v12t": 0, "v12v": 0, "tt": 443, "tv": 95, "pct": 21.44}, {"code": "05377", "name": "รพ.สต.บ้านห้วยมะทอ", "type": "ลูกข่าย", "v11t": 442, "v11v": 91, "v12t": 0, "v12v": 0, "tt": 442, "tv": 91, "pct": 20.59}, {"code": "05378", "name": "รพ.สต.บ้านพิมูล", "type": "ลูกข่าย", "v11t": 387, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 387, "tv": 0, "pct": 0.0}, {"code": "05379", "name": "รพ.สต.บ้านคำเหมือดแก้ว", "type": "ลูกข่าย", "v11t": 420, "v11v": 75, "v12t": 0, "v12v": 0, "tt": 420, "tv": 75, "pct": 17.86}, {"code": "05380", "name": "รพ.สต.บ้านโนนขี้ควง", "type": "ลูกข่าย", "v11t": 405, "v11v": 39, "v12t": 0, "v12v": 0, "tt": 405, "tv": 39, "pct": 9.63}, {"code": "05381", "name": "รพ.สต.บ้านทรายทอง", "type": "ลูกข่าย", "v11t": 385, "v11v": 67, "v12t": 0, "v12v": 0, "tt": 385, "tv": 67, "pct": 17.4}, {"code": "14284", "name": "รพ.สต.บ้านหาดทรายมูล", "type": "ลูกข่าย", "v11t": 388, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 388, "tv": 0, "pct": 0.0}]}, {"nc": "11083", "district": "สหัสขันธ์", "mn": "รพ.สหัสขันธ์", "sc": 8, "v11t": 4800, "v11v": 552, "v12t": 0, "v12v": 0, "tt": 4800, "tv": 552, "pct": 11.5, "units": [{"code": "11083", "name": "รพ.สหัสขันธ์", "type": "แม่ข่าย", "v11t": 820, "v11v": 149, "v12t": 0, "v12v": 0, "tt": 820, "tv": 149, "pct": 18.17}, {"code": "05382", "name": "รพ.สต.บ้านคำลือชา", "type": "ลูกข่าย", "v11t": 410, "v11v": 100, "v12t": 0, "v12v": 0, "tt": 410, "tv": 100, "pct": 24.39}, {"code": "05383", "name": "รพ.สต.บ้านโนนสมบูรณ์", "type": "ลูกข่าย", "v11t": 235, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 235, "tv": 0, "pct": 0.0}, {"code": "05384", "name": "รพ.สต.บ้านนามะเขือ", "type": "ลูกข่าย", "v11t": 950, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 950, "tv": 0, "pct": 0.0}, {"code": "05385", "name": "รพ.สต.บ้านโคกก่อง", "type": "ลูกข่าย", "v11t": 400, "v11v": 57, "v12t": 0, "v12v": 0, "tt": 400, "tv": 57, "pct": 14.25}, {"code": "05386", "name": "รพ.สต.บ้านม่วงกุญชร (บ้านม่วงคำ)", "type": "ลูกข่าย", "v11t": 355, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 355, "tv": 0, "pct": 0.0}, {"code": "05387", "name": "รพ.สต.แก้งนคร", "type": "ลูกข่าย", "v11t": 330, "v11v": 76, "v12t": 0, "v12v": 0, "tt": 330, "tv": 76, "pct": 23.03}, {"code": "05388", "name": "รพ.สต.บ้านโนนแหลมทอง", "type": "ลูกข่าย", "v11t": 680, "v11v": 156, "v12t": 0, "v12v": 0, "tt": 680, "tv": 156, "pct": 22.94}, {"code": "05389", "name": "รพ.สต.บ้านโนนน้ำเกลี้ยง", "type": "ลูกข่าย", "v11t": 620, "v11v": 14, "v12t": 0, "v12v": 0, "tt": 620, "tv": 14, "pct": 2.26}]}, {"nc": "11084", "district": "คำม่วง", "mn": "รพ.คำม่วง", "sc": 7, "v11t": 6000, "v11v": 627, "v12t": 0, "v12v": 0, "tt": 6000, "tv": 627, "pct": 10.45, "units": [{"code": "11084", "name": "รพ.คำม่วง", "type": "แม่ข่าย", "v11t": 1300, "v11v": 224, "v12t": 0, "v12v": 0, "tt": 1300, "tv": 224, "pct": 17.23}, {"code": "05390", "name": "สอ.บ้านเก่าเดื่อ", "type": "ลูกข่าย", "v11t": 150, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 150, "tv": 0, "pct": 0.0}, {"code": "05391", "name": "รพ.สต.บ้านโพน", "type": "ลูกข่าย", "v11t": 1500, "v11v": 118, "v12t": 0, "v12v": 0, "tt": 1500, "tv": 118, "pct": 7.87}, {"code": "05392", "name": "รพ.สต.บ้านดินจี่", "type": "ลูกข่าย", "v11t": 600, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 600, "tv": 0, "pct": 0.0}, {"code": "05393", "name": "รพ.สต.บ้านนาบอน", "type": "ลูกข่าย", "v11t": 700, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 700, "tv": 0, "pct": 0.0}, {"code": "05394", "name": "รพ.สต.บ้านนาตาล", "type": "ลูกข่าย", "v11t": 1000, "v11v": 285, "v12t": 0, "v12v": 0, "tt": 1000, "tv": 285, "pct": 28.5}, {"code": "05395", "name": "รพ.สต.บ้านดงสวนพัฒนา", "type": "ลูกข่าย", "v11t": 250, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 250, "tv": 0, "pct": 0.0}, {"code": "05396", "name": "รพ.สต.บ้านสูงเนิน", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}]}, {"nc": "11085", "district": "ท่าคันโท", "mn": "รพ.ท่าคันโท", "sc": 7, "v11t": 2500, "v11v": 311, "v12t": 0, "v12v": 0, "tt": 2500, "tv": 311, "pct": 12.44, "units": [{"code": "11085", "name": "รพ.ท่าคันโท", "type": "แม่ข่าย", "v11t": 0, "v11v": 311, "v12t": 0, "v12v": 0, "tt": 0, "tv": 311, "pct": 0.0}, {"code": "05397", "name": "รพ.สต.บ้านกุงเก่า", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05398", "name": "รพ.สต.บ้านยางอุ้ม", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05399", "name": "รพ.สต.บ้านกุดจิก", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05400", "name": "รพ.สต.บ้านแสนสุข", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05401", "name": "รพ.สต.บ้านหนองแซง", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05402", "name": "รพ.สต.บ้านดงกลาง", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05403", "name": "รพ.สต.บ้านดงสมบูรณ์", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}]}, {"nc": "11086", "district": "หนองกุงศรี", "mn": "รพ.หนองกุงศรี", "sc": 9, "v11t": 2400, "v11v": 290, "v12t": 0, "v12v": 0, "tt": 2400, "tv": 290, "pct": 12.08, "units": [{"code": "11086", "name": "รพ.หนองกุงศรี", "type": "แม่ข่าย", "v11t": 283, "v11v": 53, "v12t": 0, "v12v": 0, "tt": 283, "tv": 53, "pct": 18.73}, {"code": "05404", "name": "รพ.สต.บ้านคำไฮ", "type": "ลูกข่าย", "v11t": 79, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 79, "tv": 0, "pct": 0.0}, {"code": "05405", "name": "รพ.สต.บ้านหนองบัว", "type": "ลูกข่าย", "v11t": 277, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 277, "tv": 0, "pct": 0.0}, {"code": "05406", "name": "รพ.สต.บ้านห้วยยางดง", "type": "ลูกข่าย", "v11t": 345, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 345, "tv": 0, "pct": 0.0}, {"code": "05407", "name": "รพ.สต.บ้านหนองสรวง", "type": "ลูกข่าย", "v11t": 237, "v11v": 237, "v12t": 0, "v12v": 0, "tt": 237, "tv": 237, "pct": 100.0}, {"code": "05408", "name": "รพ.สต.บ้านหนองไผ่", "type": "ลูกข่าย", "v11t": 155, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 155, "tv": 0, "pct": 0.0}, {"code": "05409", "name": "รพ.สต.บ้านหนองชุมแสง", "type": "ลูกข่าย", "v11t": 270, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 270, "tv": 0, "pct": 0.0}, {"code": "05410", "name": "รพ.สต.บ้านภูฮัง", "type": "ลูกข่าย", "v11t": 159, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 159, "tv": 0, "pct": 0.0}, {"code": "05411", "name": "รพ.สต.บ้านหนองกุงเผือก", "type": "ลูกข่าย", "v11t": 290, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 290, "tv": 0, "pct": 0.0}, {"code": "05412", "name": "รพ.สต.บ้านหนองหิน", "type": "ลูกข่าย", "v11t": 305, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 305, "tv": 0, "pct": 0.0}]}, {"nc": "11087", "district": "สมเด็จ", "mn": "รพ.สมเด็จ", "sc": 9, "v11t": 5970, "v11v": 935, "v12t": 0, "v12v": 0, "tt": 5970, "tv": 935, "pct": 15.66, "units": [{"code": "11087", "name": "รพ.สมเด็จ", "type": "แม่ข่าย", "v11t": 500, "v11v": 503, "v12t": 0, "v12v": 0, "tt": 500, "tv": 503, "pct": 100.6}, {"code": "05413", "name": "รพ.สต.บ้านหนองบัวโดน", "type": "ลูกข่าย", "v11t": 500, "v11v": 432, "v12t": 0, "v12v": 0, "tt": 500, "tv": 432, "pct": 86.4}, {"code": "05414", "name": "รพ.สต.บ้านสร้างแก้ว", "type": "ลูกข่าย", "v11t": 1000, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 1000, "tv": 0, "pct": 0.0}, {"code": "05415", "name": "รพ.สต.แซงบาดาล", "type": "ลูกข่าย", "v11t": 1000, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 1000, "tv": 0, "pct": 0.0}, {"code": "05416", "name": "รพ.สต.บ้านมหไชย (บ้านมหาไชย)", "type": "ลูกข่าย", "v11t": 550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 550, "tv": 0, "pct": 0.0}, {"code": "05417", "name": "รพ.สต.บ้านหมูม่น", "type": "ลูกข่าย", "v11t": 690, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 690, "tv": 0, "pct": 0.0}, {"code": "05418", "name": "รพ.สต.บ้านกอก", "type": "ลูกข่าย", "v11t": 455, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 455, "tv": 0, "pct": 0.0}, {"code": "05419", "name": "รพ.สต.บ้านขมิ้น", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05420", "name": "รพ.สต.บ้านหนองแสง", "type": "ลูกข่าย", "v11t": 475, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 475, "tv": 0, "pct": 0.0}, {"code": "05421", "name": "รพ.สต.บ้านบอน", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}]}, {"nc": "11088", "district": "ห้วยผึ้ง", "mn": "รพ.ห้วยผึ้ง", "sc": 5, "v11t": 4300, "v11v": 805, "v12t": 0, "v12v": 0, "tt": 4300, "tv": 805, "pct": 18.72, "units": [{"code": "11088", "name": "รพ.ห้วยผึ้ง", "type": "แม่ข่าย", "v11t": 1000, "v11v": 313, "v12t": 0, "v12v": 0, "tt": 1000, "tv": 313, "pct": 31.3}, {"code": "05422", "name": "รพ.สต.บ้านคำบง", "type": "ลูกข่าย", "v11t": 750, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 750, "tv": 0, "pct": 0.0}, {"code": "05423", "name": "รพ.สต.บ้านคงอุดม (บ้านดงอุดม)", "type": "ลูกข่าย", "v11t": 650, "v11v": 87, "v12t": 0, "v12v": 0, "tt": 650, "tv": 87, "pct": 13.38}, {"code": "05424", "name": "รพ.สต.บ้านไค้นุ่น", "type": "ลูกข่าย", "v11t": 600, "v11v": 100, "v12t": 0, "v12v": 0, "tt": 600, "tv": 100, "pct": 16.67}, {"code": "05425", "name": "รพ.สต.บ้านหนองอีบุตร", "type": "ลูกข่าย", "v11t": 750, "v11v": 100, "v12t": 0, "v12v": 0, "tt": 750, "tv": 100, "pct": 13.33}, {"code": "13966", "name": "รพ.สต.บ้านเหล่าสีแก้ว", "type": "ลูกข่าย", "v11t": 550, "v11v": 205, "v12t": 0, "v12v": 0, "tt": 550, "tv": 205, "pct": 37.27}]}, {"nc": "11449", "district": "กุฉินารายณ์", "mn": "รพร.กุฉินารายณ์", "sc": 17, "v11t": 10000, "v11v": 1467, "v12t": 0, "v12v": 0, "tt": 10000, "tv": 1467, "pct": 14.67, "units": [{"code": "11449", "name": "รพร.กุฉินารายณ์", "type": "แม่ข่าย", "v11t": 2000, "v11v": 412, "v12t": 0, "v12v": 0, "tt": 2000, "tv": 412, "pct": 20.6}, {"code": "05335", "name": "รพ.สต.บ้านแจนแลน", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05336", "name": "รพ.สต.บ้านกุดฝั่งแดง", "type": "ลูกข่าย", "v11t": 200, "v11v": 177, "v12t": 0, "v12v": 0, "tt": 200, "tv": 177, "pct": 88.5}, {"code": "05337", "name": "รพ.สต.บ้านเหล่าใหญ่", "type": "ลูกข่าย", "v11t": 200, "v11v": 49, "v12t": 0, "v12v": 0, "tt": 200, "tv": 49, "pct": 24.5}, {"code": "05338", "name": "รพ.สต.บ้านสันติสุข (บ้านจุมจัง)", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05339", "name": "รพ.สต.บ้านนาสีนวล", "type": "ลูกข่าย", "v11t": 80, "v11v": 81, "v12t": 0, "v12v": 0, "tt": 80, "tv": 81, "pct": 101.25}, {"code": "05340", "name": "รพ.สต.บ้านเหล่าไฮงาม", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05341", "name": "รพ.สต.บ้านสวนผึ้ง", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05342", "name": "รพ.สต.บ้านท่าไคร้ (บ้านนาไคร้)", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05343", "name": "รพ.สต.บ้านกุดหว้า", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05344", "name": "รพ.สต.หนองแวงศรี (บ้านสุขแสงทอง)", "type": "ลูกข่าย", "v11t": 551, "v11v": 445, "v12t": 0, "v12v": 0, "tt": 551, "tv": 445, "pct": 80.76}, {"code": "05345", "name": "รพ.สต.บ้านคุย", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05346", "name": "รพ.สต.บ้านโนนฟองแก้ว", "type": "ลูกข่าย", "v11t": 259, "v11v": 4, "v12t": 0, "v12v": 0, "tt": 259, "tv": 4, "pct": 1.54}, {"code": "05347", "name": "รพ.สต.บ้านโนนสวาง", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05348", "name": "รพ.สต.บ้านหนองห้าง", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05349", "name": "รพ.สต.บ้านนาโก", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}, {"code": "05350", "name": "รพ.สต.บ้านหนองบัวทอง", "type": "ลูกข่าย", "v11t": 300, "v11v": 299, "v12t": 0, "v12v": 0, "tt": 300, "tv": 299, "pct": 99.67}, {"code": "05351", "name": "รพ.สต.บ้านกุดค้าว", "type": "ลูกข่าย", "v11t": 0, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 0, "tv": 0, "pct": 0.0}]}, {"nc": "28017", "district": "นาคู", "mn": "รพ.นาคู", "sc": 7, "v11t": 6200, "v11v": 1356, "v12t": 0, "v12v": 0, "tt": 6200, "tv": 1356, "pct": 21.87, "units": [{"code": "28017", "name": "รพ.นาคู", "type": "แม่ข่าย", "v11t": 709, "v11v": 251, "v12t": 0, "v12v": 0, "tt": 709, "tv": 251, "pct": 35.4}, {"code": "05431", "name": "รพ.สต.บ้านนาคู", "type": "ลูกข่าย", "v11t": 900, "v11v": 181, "v12t": 0, "v12v": 0, "tt": 900, "tv": 181, "pct": 20.11}, {"code": "05432", "name": "รพ.สต.บ้านจอมศรี", "type": "ลูกข่าย", "v11t": 709, "v11v": 141, "v12t": 0, "v12v": 0, "tt": 709, "tv": 141, "pct": 19.89}, {"code": "05433", "name": "รพ.สต.บ้านากระเดา", "type": "ลูกข่าย", "v11t": 709, "v11v": 141, "v12t": 0, "v12v": 0, "tt": 709, "tv": 141, "pct": 19.89}, {"code": "05434", "name": "รพ.สต.บ้านจาน (บ้านโนนนาจาน)", "type": "ลูกข่าย", "v11t": 732, "v11v": 147, "v12t": 0, "v12v": 0, "tt": 732, "tv": 147, "pct": 20.08}, {"code": "05435", "name": "รพ.สต.บ้านนางาม", "type": "ลูกข่าย", "v11t": 709, "v11v": 142, "v12t": 0, "v12v": 0, "tt": 709, "tv": 142, "pct": 20.03}, {"code": "05436", "name": "รพ.สต.บ้านหว้านพัฒนา", "type": "ลูกข่าย", "v11t": 927, "v11v": 191, "v12t": 0, "v12v": 0, "tt": 927, "tv": 191, "pct": 20.6}, {"code": "05437", "name": "รพ.สต.บ้านภูแล่นช้าง", "type": "ลูกข่าย", "v11t": 805, "v11v": 162, "v12t": 0, "v12v": 0, "tt": 805, "tv": 162, "pct": 20.12}]}, {"nc": "28789", "district": "ฆ้องชัย", "mn": "รพ.ฆ้องชัย", "sc": 7, "v11t": 3600, "v11v": 688, "v12t": 0, "v12v": 0, "tt": 3600, "tv": 688, "pct": 19.11, "units": [{"code": "28789", "name": "รพ.ฆ้องชัย", "type": "แม่ข่าย", "v11t": 90, "v11v": 91, "v12t": 0, "v12v": 0, "tt": 90, "tv": 91, "pct": 101.11}, {"code": "05322", "name": "รพ.สต.บ้านโนนเขวา", "type": "ลูกข่าย", "v11t": 90, "v11v": 71, "v12t": 0, "v12v": 0, "tt": 90, "tv": 71, "pct": 78.89}, {"code": "05323", "name": "รพ.สต.บ้านโนนทัน", "type": "ลูกข่าย", "v11t": 100, "v11v": 85, "v12t": 0, "v12v": 0, "tt": 100, "tv": 85, "pct": 85.0}, {"code": "05324", "name": "รพ.สต.บ้านท่าเยื่อม", "type": "ลูกข่าย", "v11t": 80, "v11v": 80, "v12t": 0, "v12v": 0, "tt": 80, "tv": 80, "pct": 100.0}, {"code": "05325", "name": "รพ.สต.บ้านโนนแดง", "type": "ลูกข่าย", "v11t": 80, "v11v": 80, "v12t": 0, "v12v": 0, "tt": 80, "tv": 80, "pct": 100.0}, {"code": "05327", "name": "รพ.สต.บ้านหนองบัว", "type": "ลูกข่าย", "v11t": 90, "v11v": 90, "v12t": 0, "v12v": 0, "tt": 90, "tv": 90, "pct": 100.0}, {"code": "05328", "name": "รพ.สต.บ้านโคกประสิทธิ์", "type": "ลูกข่าย", "v11t": 90, "v11v": 90, "v12t": 0, "v12v": 0, "tt": 90, "tv": 90, "pct": 100.0}, {"code": "05332", "name": "รพ.สต.บ้านโนนศิลา(บ้านโนนศิลาเลิง)", "type": "ลูกข่าย", "v11t": 100, "v11v": 101, "v12t": 0, "v12v": 0, "tt": 100, "tv": 101, "pct": 101.0}]}, {"nc": "28790", "district": "ดอนจาน", "mn": "รพ.ดอนจาน", "sc": 6, "v11t": 2750, "v11v": 530, "v12t": 0, "v12v": 0, "tt": 2750, "tv": 530, "pct": 19.27, "units": [{"code": "28790", "name": "รพ.ดอนจาน", "type": "แม่ข่าย", "v11t": 80, "v11v": 80, "v12t": 0, "v12v": 0, "tt": 80, "tv": 80, "pct": 100.0}, {"code": "05438", "name": "รพ.สต.บ้านกุดครอง", "type": "ลูกข่าย", "v11t": 80, "v11v": 80, "v12t": 0, "v12v": 0, "tt": 80, "tv": 80, "pct": 100.0}, {"code": "05439", "name": "รพ.สต.บ้านสะอาดไชยศรี", "type": "ลูกข่าย", "v11t": 78, "v11v": 80, "v12t": 0, "v12v": 0, "tt": 78, "tv": 80, "pct": 102.56}, {"code": "05440", "name": "รพ.สต.บ้านคำหอม (บ้านดงพยุง)", "type": "ลูกข่าย", "v11t": 78, "v11v": 77, "v12t": 0, "v12v": 0, "tt": 78, "tv": 77, "pct": 98.72}, {"code": "05441", "name": "รพ.สต.บ้านม่วงนา", "type": "ลูกข่าย", "v11t": 78, "v11v": 71, "v12t": 0, "v12v": 0, "tt": 78, "tv": 71, "pct": 91.03}, {"code": "05442", "name": "รพ.สต.บ้านนาจำปา", "type": "ลูกข่าย", "v11t": 78, "v11v": 59, "v12t": 0, "v12v": 0, "tt": 78, "tv": 59, "pct": 75.64}, {"code": "23219", "name": "รพ.สต.หนองแวงแสน", "type": "ลูกข่าย", "v11t": 78, "v11v": 83, "v12t": 0, "v12v": 0, "tt": 78, "tv": 83, "pct": 106.41}]}, {"nc": "28791", "district": "สามชัย", "mn": "รพ.สามชัย", "sc": 5, "v11t": 2550, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 2550, "tv": 0, "pct": 0.0, "units": [{"code": "28791", "name": "รพ.สามชัย", "type": "แม่ข่าย", "v11t": 200, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 200, "tv": 0, "pct": 0.0}, {"code": "05426", "name": "รพ.สต.บ้านหนองแซง", "type": "ลูกข่าย", "v11t": 600, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 600, "tv": 0, "pct": 0.0}, {"code": "05427", "name": "รพ.สต.บ้านหนองแสง", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05428", "name": "รพ.สต.บ้านหนองกุงน้อย", "type": "ลูกข่าย", "v11t": 400, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 400, "tv": 0, "pct": 0.0}, {"code": "05429", "name": "รพ.สต.บ้านคำสร้างเที่ยง", "type": "ลูกข่าย", "v11t": 450, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 450, "tv": 0, "pct": 0.0}, {"code": "05430", "name": "รพ.สต.บ้านหนองช้าง (บ้านจาน)", "type": "ลูกข่าย", "v11t": 500, "v11v": 0, "v12t": 0, "v12v": 0, "tt": 500, "tv": 0, "pct": 0.0}]}];
+    Chart.register(ChartDataLabels);
 
-// --- Loader: hide immediately when DOM ready, fallback timeout ---
-function hideLoader(){const l=document.getElementById('loader');if(l)l.classList.add('hide');}
-if(document.readyState==='complete'||document.readyState==='interactive'){setTimeout(hideLoader,300);}
-else{document.addEventListener('DOMContentLoaded',()=>setTimeout(hideLoader,300));}
-setTimeout(hideLoader,3000);// safety fallback
+    const rawData = `82,เมืองกาฬสินธุ์,05291:รพ.สต.บ้านต้อน,สำนักงานสาธารณสุขจังหวัด,20,18,90
+83,เมืองกาฬสินธุ์,05292:รพ.สต.โนนสว่าง,สำนักงานสาธารณสุขจังหวัด,22,19,86.36
+84,เมืองกาฬสินธุ์,05293:รพ.สต.บ้านหนองโพน,องค์การบริหารส่วนจังหวัด,12,12,100
+85,เมืองกาฬสินธุ์,05294:รพ.สต.บ้านหนองสอ,องค์การบริหารส่วนจังหวัด,18,17,94.44
+86,เมืองกาฬสินธุ์,05295:รพ.สต.บ้านสะอาดนาทม,องค์การบริหารส่วนจังหวัด,10,10,100
+87,เมืองกาฬสินธุ์,05296:รพ.สต.บ้านฝายแตก,สำนักงานสาธารณสุขจังหวัด,8,8,100
+88,เมืองกาฬสินธุ์,05297:รพ.สต.บ้านโนนแพง,สำนักงานสาธารณสุขจังหวัด,10,10,100
+89,เมืองกาฬสินธุ์,05298:รพ.สต.บ้านเชียงเครือ,สำนักงานสาธารณสุขจังหวัด,21,15,71.43
+90,เมืองกาฬสินธุ์,05299:รพ.สต.บ้านแกเปะ,สำนักงานสาธารณสุขจังหวัด,8,7,87.5
+91,เมืองกาฬสินธุ์,05300:รพ.สต.บ้านท่าไคร้,องค์การบริหารส่วนจังหวัด,17,17,100
+92,เมืองกาฬสินธุ์,05301:รพ.สต.บ้านดงสว่าง,องค์การบริหารส่วนจังหวัด,24,24,100
+93,เมืองกาฬสินธุ์,05302:รพ.สต.บ้านหนองแวงใหญ่,สำนักงานสาธารณสุขจังหวัด,12,12,100
+94,เมืองกาฬสินธุ์,05303:รพ.สต.บ้านเหล่าหลวง,องค์การบริหารส่วนจังหวัด,11,11,100
+95,เมืองกาฬสินธุ์,05304:รพ.สต.บ้านคำไผ่,สำนักงานสาธารณสุขจังหวัด,10,9,90
+96,เมืองกาฬสินธุ์,05305:รพ.สต.บ้านเหล่ากลาง,องค์การบริหารส่วนจังหวัด,4,4,100
+97,เมืองกาฬสินธุ์,05306:รพ.สต.บ้านน้ำบุ่น,สำนักงานสาธารณสุขจังหวัด,1,0,0
+98,เมืองกาฬสินธุ์,05307:รพ.สต.บ้านหนองแวงใต้,องค์การบริหารส่วนจังหวัด,14,14,100
+99,เมืองกาฬสินธุ์,05308:รพ.สต.โนนชัย,องค์การบริหารส่วนจังหวัด,2,2,100
+100,เมืองกาฬสินธุ์,05309:รพ.สต.บ้านโพนทอง,องค์การบริหารส่วนจังหวัด,14,13,92.86
+101,เมืองกาฬสินธุ์,05310:รพ.สต.บ้านนาจารย์,สำนักงานสาธารณสุขจังหวัด,30,30,100
+102,เมืองกาฬสินธุ์,10709:โรงพยาบาลกาฬสินธุ์,สำนักงานสาธารณสุขจังหวัด,3,3,100
+103,เมืองกาฬสินธุ์,11965:โรงพยาบาลธีรวัฒน์,สำนักงานสาธารณสุขจังหวัด,0,0,0
+104,เมืองกาฬสินธุ์,13963:รพ.สต.บ้านดงเมือง,สำนักงานสาธารณสุขจังหวัด,9,9,100
+105,เมืองกาฬสินธุ์,14347:ศูนย์บริการสาธารณสุขเทศบาลเมืองกาฬสินธุ์แห่งที่ 1,สำนักงานสาธารณสุขจังหวัด,6,5,83.33
+106,เมืองกาฬสินธุ์,24743:ศูนย์บริการสาธารณสุขเทศบาลเมืองกาฬสินธุแห่งที่ 2,สำนักงานสาธารณสุขจังหวัด,7,7,100
+107,เมืองกาฬสินธุ์,77738:ศูนย์สุขภาพชุมชนเมืองโรงพยาบาลกาฬสินธุ์,สำนักงานสาธารณสุขจังหวัด,9,9,100
+75,นามน,05311:รพ.สต.บ้านโนนศรีสวัสดิ์,องค์การบริหารส่วนจังหวัด,7,7,100
+76,นามน,05312:รพ.สต.บ้านยอดแกง,สำนักงานสาธารณสุขจังหวัด,20,20,100
+77,นามน,05313:รพ.สต.บ้านหัวงัว,สำนักงานสาธารณสุขจังหวัด,11,11,100
+78,นามน,05314:รพ.สต.บ้านสงเปลือย,สำนักงานสาธารณสุขจังหวัด,9,8,88.89
+79,นามน,05315:รพ.สต.บ้านอุทัยวรรณ,สำนักงานสาธารณสุขจังหวัด,14,13,92.86
+80,นามน,05316:รพ.สต.บ้านหนองบัวใน,องค์การบริหารส่วนจังหวัด,17,15,88.24
+81,นามน,11077:โรงพยาบาลนามน,สำนักงานสาธารณสุขจังหวัด,18,17,94.44
+1,กมลาไสย,05317:รพ.สต.บ้านข้าวหลาม,องค์การบริหารส่วนจังหวัด,16,16,100
+2,กมลาไสย,05318:รพ.สต.บ้านบึง,องค์การบริหารส่วนจังหวัด,18,18,100
+3,กมลาไสย,05319:สถานีอนามัยเฉลิมพระเกียรติฯ,องค์การบริหารส่วนจังหวัด,23,23,100
+4,กมลาไสย,05320:รพ.สต.บ้านสีถาน,องค์การบริหารส่วนจังหวัด,12,12,100
+5,กมลาไสย,05321:รพ.สต.บ้านบ่อ,องค์การบริหารส่วนจังหวัด,28,28,100
+6,กมลาไสย,05326:รพ.สต.บ้านหนองแปน,องค์การบริหารส่วนจังหวัด,13,13,100
+7,กมลาไสย,05329:รพ.สต.บ้านท่าเพลิง,องค์การบริหารส่วนจังหวัด,5,5,100
+8,กมลาไสย,05330:รพ.สต.บ้านหนองบัว,องค์การบริหารส่วนจังหวัด,13,13,100
+9,กมลาไสย,05331:รพ.สต.บ้านนามล,องค์การบริหารส่วนจังหวัด,10,10,100
+10,กมลาไสย,11078:โรงพยาบาลกมลาไสย,สำนักงานสาธารณสุขจังหวัด,18,18,100
+11,กมลาไสย,13964:รพ.สต.บ้านสวนโคก,องค์การบริหารส่วนจังหวัด,12,12,100
+44,ฆ้องชัย,05322:รพ.สต.บ้านโนนเขวา,องค์การบริหารส่วนจังหวัด,7,7,100
+45,ฆ้องชัย,05323:รพ.สต.บ้านโนนทัน,องค์การบริหารส่วนจังหวัด,10,10,100
+46,ฆ้องชัย,05324:รพ.สต.บ้านท่าเยื่ยม,สำนักงานสาธารณสุขจังหวัด,2,2,100
+47,ฆ้องชัย,05325:รพ.สต.บ้านโนนแดง,สำนักงานสาธารณสุขจังหวัด,4,4,100
+48,ฆ้องชัย,05327:รพ.สต.บ้านหนองบัว,องค์การบริหารส่วนจังหวัด,11,10,90.91
+49,ฆ้องชัย,05328:รพ.สต.บ้านโคกประสิทธิ์,สำนักงานสาธารณสุขจังหวัด,2,2,100
+50,ฆ้องชัย,05332:รพ.สต.โนนศิลาเลิง,สำนักงานสาธารณสุขจังหวัด,8,8,100
+51,ฆ้องชัย,28789:โรงพยาบาลฆ้องชัย,สำนักงานสาธารณสุขจังหวัด,11,11,100
+126,ร่องคำ,05333:รพ.สต.บ้านนาเรียง,สำนักงานสาธารณสุขจังหวัด,18,16,88.89
+127,ร่องคำ,05334:รพ.สต.บ้านค้อพัฒนา,สำนักงานสาธารณสุขจังหวัด,4,4,100
+128,ร่องคำ,11079:โรงพยาบาลร่องคำ,สำนักงานสาธารณสุขจังหวัด,23,23,100
+12,กุฉินารายณ์,05335:รพ.สต.บ้านแจนแลน,สำนักงานสาธารณสุขจังหวัด,19,16,84.21
+13,กุฉินารายณ์,05336:รพ.สต.บ้านกุดฝั่งแดง,สำนักงานสาธารณสุขจังหวัด,9,9,100
+14,กุฉินารายณ์,05337:รพ.สต.บ้านเหล่าใหญ่,สำนักงานสาธารณสุขจังหวัด,11,11,100
+15,กุฉินารายณ์,05338:รพ.สต.บ้านสันติสุข,สำนักงานสาธารณสุขจังหวัด,23,16,69.57
+16,กุฉินารายณ์,05339:รพ.สต.บ้านนาสีนวล,สำนักงานสาธารณสุขจังหวัด,3,3,100
+17,กุฉินารายณ์,05340:รพ.สต.บ้านเหล่าไฮงาม,สำนักงานสาธารณสุขจังหวัด,8,8,100
+18,กุฉินารายณ์,05341:รพ.สต.บ้านสวนผึ้ง,สำนักงานสาธารณสุขจังหวัด,5,5,100
+19,กุฉินารายณ์,05342:รพ.สต.บ้านนาไคร้,สำนักงานสาธารณสุขจังหวัด,9,9,100
+20,กุฉินารายณ์,05343:รพ.สต.บ้านกุดหว้า,สำนักงานสาธารณสุขจังหวัด,13,13,100
+21,กุฉินารายณ์,05344:รพ.สต.หนองแวงศรี,สำนักงานสาธารณสุขจังหวัด,12,12,100
+22,กุฉินารายณ์,05345:รพ.สต.บ้านคุย,องค์การบริหารส่วนจังหวัด,7,4,57.14
+23,กุฉินารายณ์,05346:รพ.สต.บ้านโนนฟองแก้ว,สำนักงานสาธารณสุขจังหวัด,19,17,89.47
+24,กุฉินารายณ์,05347:รพ.สต.บ้านโนนสวาง,สำนักงานสาธารณสุขจังหวัด,16,14,87.5
+25,กุฉินารายณ์,05348:รพ.สต.บ้านหนองห้าง,องค์การบริหารส่วนจังหวัด,7,7,100
+26,กุฉินารายณ์,05349:รพ.สต.บ้านนาโก,สำนักงานสาธารณสุขจังหวัด,11,11,100
+27,กุฉินารายณ์,05350:รพ.สต.บ้านหนองบัวทอง,สำนักงานสาธารณสุขจังหวัด,9,7,77.78
+28,กุฉินารายณ์,05351:รพ.สต.บ้านกุดค้าว,สำนักงานสาธารณสุขจังหวัด,11,11,100
+29,กุฉินารายณ์,11449:โรงพยาบาลสมเด็จพระยุพราชกุฉินารายณ์,สำนักงานสาธารณสุขจังหวัด,42,42,100
+30,เขาวง,05352:รพ.สต.บ้านกุดบอด,องค์การบริหารส่วนจังหวัด,18,18,100
+31,เขาวง,05353:รพ.สต.บ้านนาตาหลิ่ว,สำนักงานสาธารณสุขจังหวัด,8,8,100
+32,เขาวง,05354:รพ.สต.บ้านหนองผือ,สำนักงานสาธารณสุขจังหวัด,5,5,100
+33,เขาวง,05355:รพ.สต.บ้านโพนสวาง,สำนักงานสาธารณสุขจังหวัด,2,2,100
+34,เขาวง,05356:รพ.สต.บ้านโนนสะอาด,องค์การบริหารส่วนจังหวัด,6,6,100
+35,เขาวง,11080:โรงพยาบาลเขาวง,สำนักงานสาธารณสุขจังหวัด,16,16,100
+108,ยางตลาด,05357:รพ.สต.บ้านเสียว,สำนักงานสาธารณสุขจังหวัด,15,9,60
+109,ยางตลาด,05358:รพ.สต.บ้านโคกศรี,สำนักงานสาธารณสุขจังหวัด,19,17,89.47
+110,ยางตลาด,05359:รพ.สต.บ้านตูม,องค์การบริหารส่วนจังหวัด,15,15,100
+111,ยางตลาด,05360:รพ.สต.บ้านโคกใหญ่,องค์การบริหารส่วนจังหวัด,18,18,100
+112,ยางตลาด,05361:รพ.สต.บ้านห้วยเตย,สำนักงานสาธารณสุขจังหวัด,6,5,83.33
+113,ยางตลาด,05362:รพ.สต.บ้านแก,องค์การบริหารส่วนจังหวัด,25,25,100
+114,ยางตลาด,05363:รพ.สต.บ้านหัวนาคำ,สำนักงานสาธารณสุขจังหวัด,4,4,100
+115,ยางตลาด,05364:รพ.สต.บ้านดงบัง,องค์การบริหารส่วนจังหวัด,11,11,100
+116,ยางตลาด,05365:รพ.สต.บ้านหนองอิเฒ่า,องค์การบริหารส่วนจังหวัด,12,12,100
+117,ยางตลาด,05366:รพ.สต.บ้านดอนยานาง,สำนักงานสาธารณสุขจังหวัด,18,18,100
+118,ยางตลาด,05367:รพ.สต.บ้านนาเชือก,สำนักงานสาธารณสุขจังหวัด,12,10,83.33
+119,ยางตลาด,05368:รพ.สต.บ้านขาม,สำนักงานสาธารณสุขจังหวัด,25,21,84
+120,ยางตลาด,05369:รพ.สต.บ้านโคกสี,สำนักงานสาธารณสุขจังหวัด,11,9,81.82
+121,ยางตลาด,05370:รพ.สต.พุทธรักษา,สำนักงานสาธารณสุขจังหวัด,11,11,100
+122,ยางตลาด,05371:รพ.สต.บ้านปอแดง,องค์การบริหารส่วนจังหวัด,14,14,100
+123,ยางตลาด,05372:รพ.สต.บ้านโนนสูง,องค์การบริหารส่วนจังหวัด,15,15,100
+124,ยางตลาด,05373:รพ.สต.บ้านหนองตอกแป้น,สำนักงานสาธารณสุขจังหวัด,13,13,100
+125,ยางตลาด,11081:โรงพยาบาลยางตลาด,สำนักงานสาธารณสุขจังหวัด,13,13,100
+170,ห้วยเม็ก,05374:รพ.สต.บ้านคำใหญ่,สำนักงานสาธารณสุขจังหวัด,17,17,100
+171,ห้วยเม็ก,05375:รพ.สต.บ้านกุดโดน,สำนักงานสาธารณสุขจังหวัด,28,28,100
+172,ห้วยเม็ก,05376:รพ.สต.บ้านหนองบัว,สำนักงานสาธารณสุขจังหวัด,6,6,100
+173,ห้วยเม็ก,05377:รพ.สต.บ้านห้วยมะทอ,สำนักงานสาธารณสุขจังหวัด,9,9,100
+174,ห้วยเม็ก,05378:รพ.สต.บ้านพิมูล,สำนักงานสาธารณสุขจังหวัด,4,4,100
+175,ห้วยเม็ก,05379:รพ.สต.บ้านคำเหมือดแก้ว,สำนักงานสาธารณสุขจังหวัด,11,11,100
+176,ห้วยเม็ก,05380:รพ.สต.บ้านโนนขี้ควง,สำนักงานสาธารณสุขจังหวัด,11,11,100
+177,ห้วยเม็ก,05381:รพ.สต.บ้านทรายทอง,สำนักงานสาธารณสุขจังหวัด,5,3,60
+178,ห้วยเม็ก,11082:โรงพยาบาลห้วยเม็ก,สำนักงานสาธารณสุขจังหวัด,18,16,88.89
+179,ห้วยเม็ก,14284:รพ.สต.บ้านหาดทรายมูล,สำนักงานสาธารณสุขจังหวัด,13,13,100
+139,สหัสขันธ์,05382:รพ.สต.บ้านคำลือชา,สำนักงานสาธารณสุขจังหวัด,10,10,100
+140,สหัสขันธ์,05383:รพ.สต.บ้านโนนสมบูรณ์,องค์การบริหารส่วนจังหวัด,7,7,100
+141,สหัสขันธ์,05384:รพ.สต.บ้านนามะเขือ,องค์การบริหารส่วนจังหวัด,13,13,100
+142,สหัสขันธ์,05385:รพ.สต.บ้านโคกก่อง,สำนักงานสาธารณสุขจังหวัด,5,5,100
+143,สหัสขันธ์,05386:รพ.สต.บ้านม่วงกุญชร,สำนักงานสาธารณสุขจังหวัด,6,6,100
+144,สหัสขันธ์,05387:ตาดดงเค็ง,สำนักงานสาธารณสุขจังหวัด,2,2,100
+145,สหัสขันธ์,05388:รพ.สต.บ้านโนนแหลมทอง,สำนักงานสาธารณสุขจังหวัด,19,19,100
+146,สหัสขันธ์,05389:รพ.สต.บ้านโนนน้ำเกลี้ยง,สำนักงานสาธารณสุขจังหวัด,11,11,100
+147,สหัสขันธ์,11083:โรงพยาบาลสหัสขันธ์,สำนักงานสาธารณสุขจังหวัด,8,6,75
+36,คำม่วง,05390:สถานีอนามัยบ้านเก่าเดื่อ,สำนักงานสาธารณสุขจังหวัด,6,6,100
+37,คำม่วง,05391:รพ.สต.บ้านโพน,องค์การบริหารส่วนจังหวัด,13,13,100
+38,คำม่วง,05392:รพ.สต.บ้านดินจี่,สำนักงานสาธารณสุขจังหวัด,24,23,95.83
+39,คำม่วง,05393:รพ.สต.บ้านนาบอน,องค์การบริหารส่วนจังหวัด,17,16,94.12
+40,คำม่วง,05394:รพ.สต.บ้านนาตาล,สำนักงานสาธารณสุขจังหวัด,33,33,100
+41,คำม่วง,05395:รพ.สต.บ้านดงสวนพัฒนา,องค์การบริหารส่วนจังหวัด,11,11,100
+42,คำม่วง,05396:รพ.สต.บ้านสูงเนิน,องค์การบริหารส่วนจังหวัด,10,9,90
+43,คำม่วง,11084:โรงพยาบาลคำม่วง,สำนักงานสาธารณสุขจังหวัด,20,20,100
+59,ท่าคันโท,05397:รพ.สต.บ้านกุงเก่า,สำนักงานสาธารณสุขจังหวัด,12,12,100
+60,ท่าคันโท,05398:รพ.สต.บ้านยางอู้ม,สำนักงานสาธารณสุขจังหวัด,20,18,90
+61,ท่าคันโท,05399:รพ.สต.บ้านกุดจิก,สำนักงานสาธารณสุขจังหวัด,10,10,100
+62,ท่าคันโท,05400:รพ.สต.บ้านแสนสุข,สำนักงานสาธารณสุขจังหวัด,2,2,100
+63,ท่าคันโท,05401:รพ.สต.บ้านหนองแซง,สำนักงานสาธารณสุขจังหวัด,26,24,92.31
+64,ท่าคันโท,05402:รพ.สต.บ้านดงกลาง,สำนักงานสาธารณสุขจังหวัด,10,9,90
+65,ท่าคันโท,05403:รพ.สต.บ้านดงสมบูรณ์,สำนักงานสาธารณสุขจังหวัด,4,4,100
+66,ท่าคันโท,11085:โรงพยาบาลท่าคันโท,สำนักงานสาธารณสุขจังหวัด,26,22,84.62
+154,หนองกุงศรี,05404:รพ.สต.บ้านคำไฮ,สำนักงานสาธารณสุขจังหวัด,7,7,100
+155,หนองกุงศรี,05405:รพ.สต.บ้านหนองบัว,สำนักงานสาธารณสุขจังหวัด,30,28,93.33
+156,หนองกุงศรี,05406:รพ.สต.บ้านห้วยยางดง,สำนักงานสาธารณสุขจังหวัด,24,24,100
+157,หนองกุงศรี,05407:รพ.สต.บ้านหนองสรวง,สำนักงานสาธารณสุขจังหวัด,11,11,100
+158,หนองกุงศรี,05408:รพ.สต.บ้านหนองไผ่,สำนักงานสาธารณสุขจังหวัด,11,11,100
+159,หนองกุงศรี,05409:รพ.สต.บ้านหนองชุมแสง,สำนักงานสาธารณสุขจังหวัด,24,24,100
+160,หนองกุงศรี,05410:รพ.สต.บ้านภูฮัง,สำนักงานสาธารณสุขจังหวัด,14,14,100
+161,หนองกุงศรี,05411:รพ.สต.บ้านหนองกุงเผือก,สำนักงานสาธารณสุขจังหวัด,21,21,100
+162,หนองกุงศรี,05412:รพ.สต.บ้านหนองหิน,องค์การบริหารส่วนจังหวัด,24,24,100
+163,หนองกุงศรี,11086:โรงพยาบาลหนองกุงศรี,สำนักงานสาธารณสุขจังหวัด,25,25,100
+129,สมเด็จ,05413:รพ.สต.บ้านหนองบัวโดน,สำนักงานสาธารณสุขจังหวัด,11,11,100
+130,สมเด็จ,05414:รพ.สต.บ้านสร้างแก้ว,สำนักงานสาธารณสุขจังหวัด,26,26,100
+131,สมเด็จ,05415:รพ.สต.แซงบาดาล,สำนักงานสาธารณสุขจังหวัด,17,17,100
+132,สมเด็จ,05416:รพ.สต.บ้านมหาไชย,องค์การบริหารส่วนจังหวัด,12,12,100
+133,สมเด็จ,05417:รพ.สต.บ้านหมูม่น,สำนักงานสาธารณสุขจังหวัด,17,17,100
+134,สมเด็จ,05418:รพ.สต.บ้านกอก,สำนักงานสาธารณสุขจังหวัด,11,11,100
+135,สมเด็จ,05419:รพ.สต.บ้านขมิ้น,สำนักงานสาธารณสุขจังหวัด,4,4,100
+136,สมเด็จ,05420:รพ.สต.บ้านหนองแสง,สำนักงานสาธารณสุขจังหวัด,9,9,100
+137,สมเด็จ,05421:รพ.สต.บ้านบอน,สำนักงานสาธารณสุขจังหวัด,13,13,100
+138,สมเด็จ,11087:โรงพยาบาลสมเด็จ,สำนักงานสาธารณสุขจังหวัด,18,15,83.33
+164,ห้วยผึ้ง,05422:รพ.สต.บ้านคำบง,องค์การบริหารส่วนจังหวัด,14,14,100
+165,ห้วยผึ้ง,05423:รพ.สต.บ้านคงอุดม,องค์การบริหารส่วนจังหวัด,9,9,100
+166,ห้วยผึ้ง,05424:รพ.สต.บ้านไค้นุ่น,องค์การบริหารส่วนจังหวัด,5,5,100
+167,ห้วยผึ้ง,05425:รพ.สต.บ้านหนองอีบุตร,องค์การบริหารส่วนจังหวัด,13,13,100
+168,ห้วยผึ้ง,11088:โรงพยาบาลห้วยผึ้ง,สำนักงานสาธารณสุขจังหวัด,18,18,100
+169,ห้วยผึ้ง,13966:รพ.สต.บ้านเหล่าสีแก้ว,องค์การบริหารส่วนจังหวัด,7,7,100
+148,สามชัย,05426:รพ.สต.บ้านหนองแซง,องค์การบริหารส่วนจังหวัด,13,13,100
+149,สามชัย,05427:รพ.สต.บ้านหนองแสง,สำนักงานสาธารณสุขจังหวัด,7,6,85.71
+150,สามชัย,05428:รพ.สต.บ้านหนองกุงน้อย,สำนักงานสาธารณสุขจังหวัด,11,11,100
+151,สามชัย,05429:รพ.สต.บ้านคำสร้างเที่ยง,องค์การบริหารส่วนจังหวัด,1,1,100
+152,สามชัย,05430:รพ.สต.บ้านหนองช้าง,สำนักงานสาธารณสุขจังหวัด,7,7,100
+153,สามชัย,28791:โรงพยาบาลสามชัย,สำนักงานสาธารณสุขจังหวัด,2,2,100
+67,นาคู,05431:รพ.สต.นาคู,สำนักงานสาธารณสุขจังหวัด,14,14,100
+68,นาคู,05432:รพ.สต.บ้านจอมศรี,สำนักงานสาธารณสุขจังหวัด,7,7,100
+69,นาคู,05433:รพ.สต.บ้านากระเดา,สำนักงานสาธารณสุขจังหวัด,2,2,100
+70,นาคู,05434:รพ.สต.บ้านโนนนาจาน,สำนักงานสาธารณสุขจังหวัด,13,13,100
+71,นาคู,05435:รพ.สต.บ้านนางาม,สำนักงานสาธารณสุขจังหวัด,2,2,100
+72,นาคู,05436:รพ.สต.บ้านหว้านพัฒนา,สำนักงานสาธารณสุขจังหวัด,12,12,100
+73,นาคู,05437:รพ.สต.ภูแล่นช้าง,สำนักงานสาธารณสุขจังหวัด,7,7,100
+74,นาคู,28017:โรงพยาบาลนาคู,สำนักงานสาธารณสุขจังหวัด,10,10,100
+52,ดอนจาน,05438:รพ.สต.บ้านกุดครอง,สำนักงานสาธารณสุขจังหวัด,13,13,100
+53,ดอนจาน,05439:รพ.สต.บ้านสะอาดไชยศรี,สำนักงานสาธารณสุขจังหวัด,4,4,100
+54,ดอนจาน,05440:รพ.สต.ดงเจริญ,สำนักงานสาธารณสุขจังหวัด,12,12,100
+55,ดอนจาน,05441:รพ.สต.บ้านม่วงนา,สำนักงานสาธารณสุขจังหวัด,17,17,100
+56,ดอนจาน,05442:รพ.สต.บ้านนาจำปา,สำนักงานสาธารณสุขจังหวัด,5,5,100
+57,ดอนจาน,23219:รพ.สต.หนองแวงแสน,สำนักงานสาธารณสุขจังหวัด,6,6,100
+58,ดอนจาน,28790:โรงพยาบาลดอนจาน,สำนักงานสาธารณสุขจังหวัด,8,7,87.5`;
 
-// --- Count animation ---
-// --- Active Nav ---
-window.addEventListener('scroll',()=>{{
-const btn=document.getElementById('scrollTop');
-btn.classList.toggle('show',window.scrollY>400);
-const sections=['district-selector','kpi-section','charts-section','table-section'];
-const links=document.querySelectorAll('.nav a');
-let current='';
-sections.forEach(id=>{{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-100)current=id;}});
-links.forEach(a=>{{a.classList.toggle('active',a.getAttribute('href')==='#'+current);}});
-}});
+    let data = [];
+    let currentPerformanceFilter = 'all'; 
+    let currentSortCol = 'percent'; 
+    let currentSortDir = 'desc';
+    
+    // ตั้งค่า Pagination 50 รายการต่อหน้า
+    let currentPage = 1;
+    const rowsPerPage = 50;
+    
+    let districtChartInst = null;
+    let agencyChartInst = null;
 
-// --- Count animation ---
-function animateValue(el, target, suffix) {{
-  const isFloat = suffix === '%';
-  let current = 0;
-  const step = target / 40;
-  if(target === 0) {{ el.textContent = "0" + suffix; return; }}
-  const timer = setInterval(() => {{
-    current += step;
-    if(current >= target) {{ current = target; clearInterval(timer); }}
-    el.textContent = (isFloat ? current.toFixed(2) : Math.round(current).toLocaleString()) + suffix;
-  }}, 30);
-}}
-
-function updateKPIs(tt, tv, pct, v11t, v12t, v11v, v12v, num1, num2, lbl1, lbl2, lbl3, lbl4) {{
-  animateValue(document.getElementById('kpi-tt'), tt, '');
-  document.getElementById('kpi-sub-t').textContent = `V11: ${v11t.toLocaleString()} · V12: ${v12t.toLocaleString()}`;
-  
-  animateValue(document.getElementById('kpi-tv'), tv, '');
-  document.getElementById('kpi-sub-v').textContent = `V11: ${v11v.toLocaleString()} · V12: ${v12v.toLocaleString()}`;
-  
-  animateValue(document.getElementById('kpi-pct'), parseFloat(pct), '%');
-  const pfill = document.getElementById('kpi-pfill');
-  pfill.style.width = Math.min(pct, 100) + '%';
-  pfill.style.background = pct>=80?'linear-gradient(135deg,var(--green),var(--cyan))':pct>=50?'linear-gradient(135deg,var(--amber),#f97316)':'linear-gradient(135deg,var(--red),#f97316)';
-  
-  document.getElementById('kpi-lbl-units').textContent = lbl1;
-  animateValue(document.getElementById('kpi-units'), num1, '');
-  document.getElementById('kpi-sub-units').textContent = lbl2;
-  
-  document.getElementById('kpi-lbl-total-units').textContent = lbl3;
-  animateValue(document.getElementById('kpi-total-units'), num2, '');
-  document.getElementById('kpi-sub-total-units').textContent = lbl4;
-}}
-
-// --- Bar Chart ---
-const barCtx=document.getElementById('barChart').getContext('2d');
-let barChart=new Chart(barCtx,{type:'bar',data:{labels:DL,datasets:[
-{label:'เป้าหมาย V11',data:V11T,backgroundColor:'rgba(59,130,246,.7)',borderColor:'rgba(59,130,246,1)',borderWidth:1,borderRadius:4},
-{label:'ฉีดแล้ว V11',data:V11V,backgroundColor:'rgba(16,185,129,.7)',borderColor:'rgba(16,185,129,1)',borderWidth:1,borderRadius:4}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{family:"'Noto Sans Thai'"}}},datalabels:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{family:"'Noto Sans Thai'",size:11},maxRotation:45},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#94a3b8',font:{family:"'Noto Sans Thai'"}},grid:{color:'rgba(51,65,85,.3)'}}}}});
-
-function swChart(m){
-document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-let t,v,lt,lv;
-if(m==='v11'){t=V11T;v=V11V;lt='เป้าหมาย V11';lv='ฉีดแล้ว V11';document.getElementById('tv11').classList.add('active');}
-else if(m==='v12'){t=V12T;v=V12V;lt='เป้าหมาย V12';lv='ฉีดแล้ว V12';document.getElementById('tv12').classList.add('active');}
-else{t=V11T.map((x,i)=>x+V12T[i]);v=V11V.map((x,i)=>x+V12V[i]);lt='เป้าหมายรวม';lv='ฉีดรวม';document.getElementById('ttot').classList.add('active');}
-barChart.data.datasets[0].data=t;barChart.data.datasets[0].label=lt;
-barChart.data.datasets[1].data=v;barChart.data.datasets[1].label=lv;
-barChart.update();
-}
-
-// --- Pct Chart (sorted desc) ---
-const pctCtx=document.getElementById('pctChart').getContext('2d');
-const pctColors=SP.map(p=>p>=80?'rgba(16,185,129,.8)':p>=50?'rgba(245,158,11,.8)':'rgba(239,68,68,.8)');
-const pctBorders=SP.map(p=>p>=80?'rgba(16,185,129,1)':p>=50?'rgba(245,158,11,1)':'rgba(239,68,68,1)');
-let pctChart=new Chart(pctCtx,{type:'bar',data:{labels:SL,datasets:[{label:'% ผลงาน',data:SP,backgroundColor:pctColors,borderColor:pctBorders,borderWidth:1,borderRadius:4}]},
-options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',color:'#f1f5f9',font:{family:"'Noto Sans Thai'",size:11,weight:600},formatter:v=>v.toFixed(1)+'%'}},
-scales:{x:{max:Math.max(...SP)+20,ticks:{color:'#94a3b8',callback:v=>v+'%',font:{family:"'Noto Sans Thai'"}},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#94a3b8',font:{family:"'Noto Sans Thai'",size:12}},grid:{display:false}}}}});
-
-// --- Table ---
-function pb(pct){const c=pct>=80?'ph':pct>=50?'pm':'pl';return `<span class="pct-b ${c}">${pct.toFixed(1)}%</span>`;}
-
-function buildTbl(){
-const tb=document.getElementById('tbody');tb.innerHTML='';
-ND.forEach((n,i)=>{
-const tr=document.createElement('tr');tr.classList.add('mu');
-tr.dataset.district=n.district;tr.dataset.name=n.mn;
-tr.innerHTML=`<td><button class="eb" onclick="tog('n${i}',this)">+</button></td><td>${n.district}</td><td>${n.mn}</td><td>${n.sc}</td><td>${n.tt.toLocaleString()}</td><td>${n.tv.toLocaleString()}</td><td>${pb(n.pct)}</td>`;
-tb.appendChild(tr);
-n.units.forEach(u=>{
-const sr=document.createElement('tr');sr.classList.add('sr','n'+i);
-sr.dataset.district=n.district;sr.dataset.name=u.name;
-const icon=u.type==='แม่ข่าย'?'🏥':'🏠';
-sr.innerHTML=`<td></td><td>${icon} ${u.name} <span style="color:var(--fg3);font-size:.75rem">(${u.code})</span></td><td>${u.type}</td><td></td><td>${u.tt.toLocaleString()}</td><td>${u.tv.toLocaleString()}</td><td>${pb(u.pct)}</td>`;
-tb.appendChild(sr);
-});
-});
-}
-
-function tog(cls,btn){
-const rows=document.querySelectorAll('.'+cls);
-const ex=btn.classList.toggle('ex');
-btn.textContent=ex?'−':'+';
-rows.forEach(r=>r.classList.toggle('show'));
-}
-
-function filterTbl(q){
-const ql=q.toLowerCase();
-document.querySelectorAll('#tbody tr').forEach(r=>{
-const d=(r.dataset.district||'').toLowerCase();
-const n=(r.dataset.name||'').toLowerCase();
-const m=d.includes(ql)||n.includes(ql);
-if(r.classList.contains('mu'))r.style.display=m?'':'none';
-else r.style.display=m&&r.classList.contains('show')?'':'none';
-});
-}
-
-let sortDir={};
-function srt(ci){
-const tb=document.getElementById('tbody');
-const mains=[...tb.querySelectorAll('tr.mu')];
-sortDir[ci]=!(sortDir[ci]||false);const dir=sortDir[ci]?1:-1;
-document.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sa','sd');});
-document.querySelectorAll('thead th')[ci].classList.add(dir===1?'sa':'sd');
-const groups=mains.map(m=>{const subs=[];let s=m.nextElementSibling;while(s&&s.classList.contains('sr')){subs.push(s);s=s.nextElementSibling;}return{main:m,subs};});
-groups.sort((a,b)=>{const av=a.main.children[ci].textContent.trim();const bv=b.main.children[ci].textContent.trim();const an=parseFloat(av.replace(/[^0-9.-]/g,''));const bn=parseFloat(bv.replace(/[^0-9.-]/g,''));if(!isNaN(an)&&!isNaN(bn))return(an-bn)*dir;return av.localeCompare(bv,'th')*dir;});
-tb.innerHTML='';groups.forEach(g=>{tb.appendChild(g.main);g.subs.forEach(s=>tb.appendChild(s));});
-}
-
-// --- CSV Export ---
-function exportCSV(type){
-let csv=String.fromCharCode(0xFEFF);// BOM for Excel
-if(type==='summary'){
-csv+='อำเภอ,เครือข่าย,ลูกข่าย,เป้าหมาย,ฉีดแล้ว,%ผลงาน'+String.fromCharCode(10);
-ND.forEach(n=>{csv+='"'+n.district+'","'+n.mn+'",'+n.sc+','+n.tt+','+n.tv+','+n.pct+String.fromCharCode(10);});
-}else{
-const sel=selectedDistrict;
-if(!sel){alert('กรุณาคลิกเลือกข้อมูลในตาราง Grid ก่อนดาวน์โหลดข้อมูล');return;}
-if(sel==='ภาพรวมจังหวัด'){
-csv+='รายละเอียด: ภาพรวมจังหวัดกาฬสินธุ์'+String.fromCharCode(10);
-csv+='เครือข่าย (แม่ข่าย),เป้าหมายรวม,ฉีดแล้ว,%ผลงาน'+String.fromCharCode(10);
-ND.forEach(n=>{
-csv+='"'+n.mn+'",'+n.tt+','+n.tv+','+n.pct+String.fromCharCode(10);
-});
-}else{
-csv+='รายละเอียดอำเภอ: '+sel+String.fromCharCode(10);
-csv+='ประเภท,รหัส,ชื่อหน่วยบริการ,เป้าหมาย V11,ฉีด V11,เป้าหมาย V12,ฉีด V12,เป้าหมายรวม,ฉีดรวม,%ผลงาน'+String.fromCharCode(10);
-ND.filter(n=>n.district===sel).forEach(n=>{
-n.units.forEach(u=>{csv+='"'+u.type+'","'+u.code+'","'+u.name+'",'+u.v11t+','+u.v11v+','+u.v12t+','+u.v12v+','+u.tt+','+u.tv+','+u.pct+String.fromCharCode(10);});
-});
-}
-}
-const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-a.download=type==='summary'?'สรุปเครือข่าย_กาฬสินธุ์.csv':('รายละเอียด_'+selectedDistrict+'.csv');
-a.click();
-}
-
-// --- Theme Selector ---
-function setTheme(name) {
-  document.body.className = 'theme-' + name;
-  localStorage.setItem('df-theme', name);
-  
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === name);
-  });
-  
-  const isLight = name === 'light';
-  const isBlue = name === 'blue';
-  const isEmerald = name === 'emerald';
-  
-  let textColor = isLight ? '#334155' : isBlue ? '#8b9bb4' : isEmerald ? '#a7f3d0' : '#94a3b8';
-  let gridColor = isLight ? 'rgba(226, 232, 240, 0.8)' : isBlue ? 'rgba(58, 80, 107, 0.3)' : isEmerald ? 'rgba(15, 118, 110, 0.3)' : 'rgba(51, 65, 85, 0.2)';
-  
-  [barChart, pctChart, daDoughnutChart, daBarChart].forEach(chart => {
-    if (chart) {
-      if (chart.options.scales) {
-        if (chart.options.scales.x) {
-          if (chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = textColor;
-          if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
+    Chart.defaults.font.family = "'Prompt', sans-serif";
+    Chart.defaults.color = '#475569';
+    
+    rawData.split('\n').forEach(line => {
+        let cols = line.split(',');
+        if(cols.length >= 7) {
+            data.push({
+                district: cols[1].trim(),
+                unit: cols[2].includes(':') ? cols[2].split(':')[1].trim() : cols[2].trim(),
+                agency: cols[3].trim(),
+                target: parseFloat(cols[4]) || 0,
+                mmr2: parseFloat(cols[5]) || 0,
+                percent: parseFloat(cols[6]) || 0
+            });
         }
-        if (chart.options.scales.y) {
-          if (chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = textColor;
-          if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
-        }
-      }
-      if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-        chart.options.plugins.legend.labels.color = textColor;
-      }
-      chart.update('none');
+    });
+
+    const districtSelect = document.getElementById('districtSelect');
+    const agencySelect = document.getElementById('agencySelect');
+    const unitSelect = document.getElementById('unitSelect');
+    const tableBody = document.getElementById('tableBody');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    const districts = [...new Set(data.map(item => item.district))].sort();
+    districts.forEach(d => {
+        let option = document.createElement('option');
+        option.value = d; option.text = d;
+        districtSelect.appendChild(option);
+    });
+
+    const agencies = [...new Set(data.map(item => item.agency))].sort();
+    agencies.forEach(a => {
+        let option = document.createElement('option');
+        option.value = a; option.text = a;
+        agencySelect.appendChild(option);
+    });
+
+    function updateFilterCounts() {
+        let selDistrict = districtSelect.value;
+        let selAgency = agencySelect.value;
+
+        let baseData = data.filter(item => {
+            let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
+            let matchAgency = (selAgency === "ทั้งหมด" || item.agency === selAgency);
+            return matchDistrict && matchAgency;
+        });
+
+        let counts = { 'all': 0, '100': 0, '95-99': 0, '90-94': 0, '85-89': 0, '<85': 0 };
+        
+        baseData.forEach(item => {
+            counts['all']++;
+            if (item.percent >= 100) counts['100']++;
+            else if (item.percent >= 94.99) counts['95-99']++;
+            else if (item.percent >= 90.00) counts['90-94']++;
+            else if (item.percent >= 84.99) counts['85-89']++;
+            else counts['<85']++;
+        });
+
+        document.getElementById('count-all').innerText = counts['all'];
+        document.getElementById('count-100').innerText = counts['100'];
+        document.getElementById('count-95-99').innerText = counts['95-99'];
+        document.getElementById('count-90-94').innerText = counts['90-94'];
+        document.getElementById('count-85-89').innerText = counts['85-89'];
+        document.getElementById('count-lt85').innerText = counts['<85'];
     }
-  });
-}
 
-// --- District Analysis ---
-let daDoughnutChart=null,daBarChart=null;
-let selectedDistrict='';
+    function updateUnitDropdown() {
+        let selectedDistrict = districtSelect.value;
+        let selectedAgency = agencySelect.value;
+        
+        unitSelect.innerHTML = '<option value="ทั้งหมด">-- ทุกหน่วยบริการ --</option>';
+        
+        let filteredUnits = data.filter(item => {
+            let matchDistrict = (selectedDistrict === "ทั้งหมด" || item.district === selectedDistrict);
+            let matchAgency = (selectedAgency === "ทั้งหมด" || item.agency === selectedAgency);
+            
+            let matchPerformance = true;
+            if (currentPerformanceFilter === "100") matchPerformance = item.percent >= 100;
+            else if (currentPerformanceFilter === "95-99") matchPerformance = item.percent >= 94.99 && item.percent < 100;
+            else if (currentPerformanceFilter === "90-94") matchPerformance = item.percent >= 90.00 && item.percent < 94.99;
+            else if (currentPerformanceFilter === "85-89") matchPerformance = item.percent >= 84.99 && item.percent < 90.00;
+            else if (currentPerformanceFilter === "<85") matchPerformance = item.percent < 84.99;
 
-function selectDistrictCard(name, scroll = true) {
-selectedDistrict=name;
-document.querySelectorAll('.da-grid-card').forEach(c=>c.classList.remove('active'));
-const activeCard=document.getElementById('dg-'+name);
-if(activeCard)activeCard.classList.add('active');
-showDistrict(name, scroll);
-}
+            return matchDistrict && matchAgency && matchPerformance;
+        });
+        
+        const units = [...new Set(filteredUnits.map(item => item.unit))].sort();
+        units.forEach(u => {
+            let option = document.createElement('option');
+            option.value = u; option.text = u;
+            unitSelect.appendChild(option);
+        });
+    }
 
-function showDistrict(name, scroll = true){
-const bName=document.getElementById('daDistrictName');
-if(!name) return;
-
-bName.textContent = name === 'ภาพรวมจังหวัด' ? 'ภาพรวมจังหวัดกาฬสินธุ์' : 'อำเภอ' + name;
-
-let tV11T=0,tV11V=0,tV12T=0,tV12V=0,tUnits=0;
-let tTT=0,tTV=0,tPct=0;
-const chartLabels=[];
-const chartTargets=[];
-const chartVaccs=[];
-
-if(name==='ภาพรวมจังหวัด'){
-  tV11T=V11T.reduce((a,b)=>a+b,0);
-  tV11V=V11V.reduce((a,b)=>a+b,0);
-  tV12T=V12T.reduce((a,b)=>a+b,0);
-  tV12V=V12V.reduce((a,b)=>a+b,0);
-  tTT=tV11T+tV12T;
-  tTV=tV11V+tV12V;
-  tPct=tTT>0?((tTV/tTT)*100).toFixed(2):0;
-  
-  document.getElementById('provincial-charts').style.display = 'block';
-  document.getElementById('district-charts').style.display = 'none';
-  
-  updateKPIs(tTT, tTV, tPct, tV11T, tV12T, tV11V, tV12V, 18, 179, '🏥 อำเภอ', 'อำเภอ', '🏠 หน่วยบริการ', 'แม่ข่าย+ลูกข่าย');
-
-  const tblHead = document.querySelector('#dtbl thead');
-  const titleEl = document.getElementById('table-section-title');
-  if (titleEl) titleEl.innerHTML = '📋 สรุปรายเครือข่าย (คลิก + ขยายดูรายหน่วยบริการ)';
-  if (tblHead) tblHead.innerHTML = '<tr><th></th><th onclick="srt(1)">อำเภอ</th><th onclick="srt(2)">เครือข่าย</th><th onclick="srt(3)">ลูกข่าย</th><th onclick="srt(4)">เป้าหมาย</th><th onclick="srt(5)">ฉีดแล้ว</th><th onclick="srt(6)">% ผลงาน</th></tr>';
-  buildTbl();
-} else {
-  const nets = ND.filter(n => n.district === name);
-  let dUnits = 0;
-  nets.forEach(n => {
-    tV11T += n.v11t;
-    tV11V += n.v11v;
-    tV12T += n.v12t;
-    tV12V += n.v12v;
-    n.units.forEach(u => {
-      dUnits++;
-      chartLabels.push(u.name);
-      chartTargets.push(u.tt);
-      chartVaccs.push(u.tv);
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            const clickedBtn = e.currentTarget;
+            clickedBtn.classList.add('active');
+            currentPerformanceFilter = clickedBtn.getAttribute('data-filter');
+            updateUnitDropdown();
+            renderDashboard(true); // Reset ไปหน้า 1 เสมอเมื่อเปลี่ยนฟิลเตอร์
+        });
     });
-  });
-  tTT=tV11T+tV12T;
-  tTV=tV11V+tV12V;
-  tPct=tTT>0?((tTV/tTT)*100).toFixed(2):0;
 
-  document.getElementById('provincial-charts').style.display = 'none';
-  document.getElementById('district-charts').style.display = 'block';
-
-  updateKPIs(tTT, tTV, tPct, tV11T, tV12T, tV11V, tV12V, nets.length, dUnits, '🏥 เครือข่าย', 'แม่ข่าย', '🏠 หน่วยบริการ', 'ลูกข่ายในอำเภอ');
-
-  if(daDoughnutChart)daDoughnutChart.destroy();
-  const dCtx=document.getElementById('daDoughnut').getContext('2d');
-  daDoughnutChart=new Chart(dCtx,{type:'doughnut',data:{labels:['ฉีดแล้ว','ยังไม่ฉีด'],datasets:[{data:[tTV,Math.max(tTT-tTV,0)],backgroundColor:['rgba(16,185,129,.8)','rgba(51,65,85,.5)'],borderWidth:0}]},
-  options:{responsive:true,cutout:'65%',plugins:{legend:{labels:{color: document.body.classList.contains('theme-light') ? '#334155' : '#94a3b8', font:{family:"'Noto Sans Thai'"}}},datalabels:{color:'#f1f5f9',font:{family:"'Noto Sans Thai'",size:13,weight:600},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t>0?(v/t*100).toFixed(1)+'%':'0%';}}}}});
-
-  if(daBarChart)daBarChart.destroy();
-  const bCtx=document.getElementById('daBar').getContext('2d');
-  
-  const textColor = document.body.classList.contains('theme-light') ? '#334155' : '#94a3b8';
-  const gridColor = document.body.classList.contains('theme-light') ? 'rgba(226, 232, 240, 0.8)' : 'rgba(51, 65, 85, 0.2)';
-
-  daBarChart=new Chart(bCtx,{type:'bar',data:{labels:chartLabels,datasets:[
-  {label:'เป้าหมาย',data:chartTargets,backgroundColor:'rgba(59,130,246,.6)',borderRadius:3},
-  {label:'ฉีดแล้ว',data:chartVaccs,backgroundColor:'rgba(16,185,129,.6)',borderRadius:3}
-  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color: textColor, font:{family:"'Noto Sans Thai'"}}},datalabels:{display:false}},scales:{x:{ticks:{color: textColor, font:{family:"'Noto Sans Thai'"}},grid:{color: gridColor}},y:{ticks:{color: textColor, font:{family:"'Noto Sans Thai'",size:10}},grid:{display:false}}}}});
-
-  const tb = document.getElementById('tbody');
-  const titleEl = document.getElementById('table-section-title');
-  const tblHead = document.querySelector('#dtbl thead');
-  if (titleEl) titleEl.innerHTML = '📋 รายละเอียดหน่วยบริการในพื้นที่ อำเภอ' + name;
-  if (tblHead) tblHead.innerHTML = '<tr><th>ลำดับ</th><th>ประเภท</th><th>รหัส</th><th style="text-align:left;">ชื่อหน่วยบริการ</th><th>เป้าหมาย</th><th>ฉีดแล้ว</th><th>% ผลงาน</th></tr>';
-  tb.innerHTML = '';
-  let idx = 1;
-  nets.forEach(n => {
-    n.units.forEach(u => {
-      const tr = document.createElement('tr');
-      if (u.type === 'แม่ข่าย') tr.classList.add('mu');
-      const icon = u.type === 'แม่ข่าย' ? '🏥 แม่ข่าย' : '🏠 ลูกข่าย';
-      tr.dataset.district = name;
-      tr.dataset.name = u.name;
-      tr.innerHTML = '<td>' + idx++ + '</td><td>' + icon + '</td><td>' + u.code + '</td><td style="text-align:left;">' + u.name + '</td><td>' + u.tt.toLocaleString() + '</td><td>' + u.tv.toLocaleString() + '</td><td>' + pb(u.pct) + '</td>';
-      tb.appendChild(tr);
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.getAttribute('data-col');
+            if (currentSortCol === col) {
+                currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortCol = col; currentSortDir = 'desc'; 
+            }
+            
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.classList.remove('active');
+                header.querySelector('.sort-icon').innerHTML = '⇅';
+            });
+            th.classList.add('active');
+            th.querySelector('.sort-icon').innerHTML = currentSortDir === 'asc' ? '▲' : '▼';
+            renderDashboard(true);
+        });
     });
-  });
-}
 
-const currentTheme = localStorage.getItem('df-theme') || 'dark';
-setTheme(currentTheme);
+    function getBarColor(percent) {
+        if (percent >= 100) return '#0284c7'; 
+        if (percent >= 95.00) return '#065f46'; 
+        if (percent >= 90.00) return '#65a30d'; 
+        if (percent >= 85.00) return '#ea580c'; 
+        return '#dc2626'; 
+    }
 
-if (scroll) {
-  document.getElementById('district-selector').scrollIntoView({behavior:'smooth',block:'start'});
-}
-}
+    function renderInsightsLists(filteredData) {
+        let isAllDistricts = (districtSelect.value === "ทั้งหมด");
+        
+        document.getElementById('insightTitle100').innerHTML = isAllDistricts ? '🌟 รายชื่ออำเภอที่ได้ 100%' : '🌟 รายชื่อหน่วยบริการที่ได้ 100%';
+        document.getElementById('insightTitleUnder90').innerHTML = isAllDistricts ? '⚠️ รายชื่ออำเภอที่ได้น้อยกว่า 90%' : '⚠️ รายชื่อหน่วยบริการที่ได้น้อยกว่า 90%';
 
-buildTbl();
-const dfTheme = localStorage.getItem('df-theme') || 'dark';
-setTheme(dfTheme);
-selectDistrictCard('ภาพรวมจังหวัด', false); // provincial overview on load without scroll
+        const mapObj = {};
+        
+        filteredData.forEach(item => {
+            let key = isAllDistricts ? item.district : item.unit;
+            if (!mapObj[key]) mapObj[key] = { target: 0, mmr2: 0 };
+            mapObj[key].target += item.target;
+            mapObj[key].mmr2 += item.mmr2;
+        });
+
+        let list100 = [];
+        let listUnder90 = [];
+
+        Object.keys(mapObj).forEach(k => {
+            const tgt = mapObj[k].target;
+            const mmr = mapObj[k].mmr2;
+            const pct = tgt > 0 ? (mmr / tgt) * 100 : 0;
+            
+            if (pct >= 100) {
+                list100.push(k);
+            } else if (pct < 90) {
+                listUnder90.push({ name: k, pct: pct });
+            }
+        });
+
+        list100.sort();
+        listUnder90.sort((a,b) => a.pct - b.pct);
+
+        const el100 = document.getElementById('districts100List');
+        const elUnder90 = document.getElementById('districtsUnder90List');
+
+        if (list100.length > 0) {
+            el100.innerHTML = list100.map(d => `<span class="pill success">${d}</span>`).join('');
+        } else {
+            el100.innerHTML = '<span class="no-data">- ไม่มีข้อมูล -</span>';
+        }
+
+        if (listUnder90.length > 0) {
+            elUnder90.innerHTML = listUnder90.map(d => `<span class="pill warning">${d.name} (${d.pct.toFixed(2)}%)</span>`).join('');
+        } else {
+            elUnder90.innerHTML = '<span class="no-data">- ไม่มีข้อมูล -</span>';
+        }
+    }
+
+    function renderCharts(filteredData) {
+        let isAllDistricts = (districtSelect.value === "ทั้งหมด");
+        
+        document.getElementById('mainChartTitle').innerHTML = isAllDistricts ? '📊 กราฟแท่งผลงานรายอำเภอ' : '📊 กราฟแท่งผลงานรายหน่วยบริการ';
+
+        const mainMap = {};
+        filteredData.forEach(item => {
+            let key = isAllDistricts ? item.district : item.unit;
+            if (!mainMap[key]) mainMap[key] = { target: 0, mmr2: 0 };
+            mainMap[key].target += item.target;
+            mainMap[key].mmr2 += item.mmr2;
+        });
+        
+        let mainArr = Object.keys(mainMap).map(k => {
+            return {
+                name: k,
+                pct: mainMap[k].target > 0 ? (mainMap[k].mmr2 / mainMap[k].target) * 100 : 0
+            };
+        });
+        mainArr.sort((a, b) => b.pct - a.pct); 
+
+        let mainLabels = mainArr.map(item => item.name);
+        let mainData = mainArr.map(item => item.pct.toFixed(2));
+        let mainColors = mainArr.map(item => getBarColor(item.pct));
+
+        if (districtChartInst) districtChartInst.destroy();
+        const ctxDist = document.getElementById('districtChart').getContext('2d');
+        districtChartInst = new Chart(ctxDist, {
+            type: 'bar',
+            data: {
+                labels: mainLabels,
+                datasets: [{
+                    label: 'ร้อยละความครอบคลุม',
+                    data: mainData,
+                    backgroundColor: mainColors,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        formatter: Math.round,
+                        font: { weight: 'bold', size: 10 }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 115, ticks: { callback: function(val) { return val + '%' } } },
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } }
+                }
+            }
+        });
+
+        const agMap = {};
+        filteredData.forEach(item => {
+            if (!agMap[item.agency]) agMap[item.agency] = { target: 0, mmr2: 0 };
+            agMap[item.agency].target += item.target;
+            agMap[item.agency].mmr2 += item.mmr2;
+        });
+        
+        let agArr = Object.keys(agMap).map(k => {
+            return {
+                name: k,
+                pct: agMap[k].target > 0 ? (agMap[k].mmr2 / agMap[k].target) * 100 : 0
+            };
+        });
+        agArr.sort((a, b) => b.pct - a.pct); 
+
+        let agLabels = agArr.map(item => item.name);
+        let agData = agArr.map(item => item.pct.toFixed(2));
+        let agColors = agArr.map(item => getBarColor(item.pct));
+
+        if (agencyChartInst) agencyChartInst.destroy();
+        const ctxAg = document.getElementById('agencyChart').getContext('2d');
+        agencyChartInst = new Chart(ctxAg, {
+            type: 'bar',
+            data: {
+                labels: agLabels,
+                datasets: [{
+                    label: 'ร้อยละความครอบคลุม',
+                    data: agData,
+                    backgroundColor: agColors,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        formatter: Math.round,
+                        font: { weight: 'bold', size: 12 }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 115, ticks: { callback: function(val) { return val + '%' } } }
+                }
+            }
+        });
+    }
+
+    // ฟังก์ชันสร้างปุ่ม Pagination
+    function renderPagination(totalRows) {
+        const paginationContainer = document.getElementById('paginationControls');
+        if (totalRows === 0) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        let start = ((currentPage - 1) * rowsPerPage) + 1;
+        let end = Math.min(currentPage * rowsPerPage, totalRows);
+
+        let html = `<div class="page-info">แสดง ${start} - ${end} จากทั้งหมด ${totalRows} รายการ</div>`;
+        html += `<div class="page-buttons">`;
+        
+        html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">❮ ก่อนหน้า</button>`;
+        
+        for(let i = 1; i <= totalPages; i++) {
+            // โชว์ปุ่มครบทุกหน้าเพราะข้อมูลไม่ได้มหาศาลมาก (เต็มที่ไม่เกิน 4 หน้า)
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+
+        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">ถัดไป ❯</button>`;
+        html += `</div>`;
+
+        paginationContainer.innerHTML = html;
+    }
+
+    // ฟังก์ชันเปลี่ยนหน้า
+    window.goToPage = function(page) {
+        currentPage = page;
+        renderDashboard(false); 
+    };
+
+    function renderDashboard(resetPage = true) {
+        if(resetPage) currentPage = 1;
+
+        let selDistrict = districtSelect.value;
+        let selAgency = agencySelect.value;
+        let selUnit = unitSelect.value;
+
+        let filteredData = data.filter(item => {
+            let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
+            let matchAgency = (selAgency === "ทั้งหมด" || item.agency === selAgency);
+            let matchUnit = (selUnit === "ทั้งหมด" || item.unit === selUnit);
+            
+            let matchPerformance = true;
+            if (currentPerformanceFilter === "100") matchPerformance = item.percent >= 100;
+            else if (currentPerformanceFilter === "95-99") matchPerformance = item.percent >= 94.99 && item.percent < 100;
+            else if (currentPerformanceFilter === "90-94") matchPerformance = item.percent >= 90.00 && item.percent < 94.99;
+            else if (currentPerformanceFilter === "85-89") matchPerformance = item.percent >= 84.99 && item.percent < 90.00;
+            else if (currentPerformanceFilter === "<85") matchPerformance = item.percent < 84.99;
+
+            return matchDistrict && matchAgency && matchUnit && matchPerformance;
+        });
+
+        let sumTarget = 0, sumMmr2 = 0;
+        filteredData.forEach(item => { sumTarget += item.target; sumMmr2 += item.mmr2; });
+        let avgPercent = sumTarget > 0 ? (sumMmr2 / sumTarget) * 100 : 0;
+
+        document.getElementById('kpiTarget').innerText = sumTarget.toLocaleString();
+        document.getElementById('kpiMmr2').innerText = sumMmr2.toLocaleString();
+        document.getElementById('kpiPercent').innerText = avgPercent.toFixed(2) + "%";
+
+        renderCharts(filteredData);
+        renderInsightsLists(filteredData);
+
+        if (currentSortCol) {
+            filteredData.sort((a, b) => {
+                let valA = a[currentSortCol]; let valB = b[currentSortCol];
+                if (typeof valA === 'string') {
+                    return currentSortDir === 'asc' ? valA.localeCompare(valB, 'th') : valB.localeCompare(valA, 'th');
+                } else {
+                    return currentSortDir === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+        }
+
+        // ตัดข้อมูลตาม Pagination
+        const totalRows = filteredData.length;
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const paginatedData = filteredData.slice(startIndex, startIndex + rowsPerPage);
+
+        tableBody.innerHTML = '';
+        paginatedData.forEach(item => {
+            let tr = document.createElement('tr');
+            let badgeClass = 'excellent';
+            if (item.percent < 84.99) badgeClass = 'bad';
+            else if (item.percent < 90.00) badgeClass = 'warning';
+            else if (item.percent < 94.99) badgeClass = 'average';
+            else if (item.percent < 100) badgeClass = 'good';
+
+            tr.innerHTML = `
+                <td><strong>${item.district}</strong></td>
+                <td>${item.unit}</td>
+                <td><span style="color: #64748b; font-size: 13px;">${item.agency}</span></td>
+                <td>${item.target}</td>
+                <td>${item.mmr2}</td>
+                <td><span class="badge ${badgeClass}">${item.percent.toFixed(2)}%</span></td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        renderPagination(totalRows);
+    }
+
+    function exportTableToCSV(filename) {
+        let csv = [];
+        csv.push('\uFEFF' + "อำเภอ,หน่วยบริการ,สังกัด,เป้าหมาย,MMR2,ร้อยละความครอบคลุม");
+        
+        // Export ข้อมูลที่กรองทั้งหมด (ไม่เอาแค่ในหน้าปัจจุบัน)
+        let selDistrict = districtSelect.value;
+        let selAgency = agencySelect.value;
+        let selUnit = unitSelect.value;
+
+        let filteredData = data.filter(item => {
+            let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
+            let matchAgency = (selAgency === "ทั้งหมด" || item.agency === selAgency);
+            let matchUnit = (selUnit === "ทั้งหมด" || item.unit === selUnit);
+            
+            let matchPerformance = true;
+            if (currentPerformanceFilter === "100") matchPerformance = item.percent >= 100;
+            else if (currentPerformanceFilter === "95-99") matchPerformance = item.percent >= 94.99 && item.percent < 100;
+            else if (currentPerformanceFilter === "90-94") matchPerformance = item.percent >= 90.00 && item.percent < 94.99;
+            else if (currentPerformanceFilter === "85-89") matchPerformance = item.percent >= 84.99 && item.percent < 90.00;
+            else if (currentPerformanceFilter === "<85") matchPerformance = item.percent < 84.99;
+
+            return matchDistrict && matchAgency && matchUnit && matchPerformance;
+        });
+
+        filteredData.forEach(item => {
+            csv.push(`"${item.district}","${item.unit}","${item.agency}","${item.target}","${item.mmr2}","${item.percent.toFixed(2)}"`);
+        });
+
+        let csvFile = new Blob([csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+        let downloadLink = document.createElement("a");
+        downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none"; document.body.appendChild(downloadLink);
+        downloadLink.click(); document.body.removeChild(downloadLink);
+    }
+
+    districtSelect.addEventListener('change', () => { updateFilterCounts(); updateUnitDropdown(); renderDashboard(true); });
+    agencySelect.addEventListener('change', () => { updateFilterCounts(); updateUnitDropdown(); renderDashboard(true); });
+    unitSelect.addEventListener('change', () => { renderDashboard(true); });
+
+    updateFilterCounts(); updateUnitDropdown(); renderDashboard(true);
 </script>
+
 </body>
 </html>
