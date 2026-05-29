@@ -45,15 +45,37 @@
 
         /* ส่วนของ Dropdown Controls */
         .controls {
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 20px 25px;
-            border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; border: 1px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.95);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            padding: 20px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            z-index: 99; /* จัดการ stacking context ให้ครอบคลุมทุกเลเยอร์บนมือถือ */
         }
-        .control-group { display: flex; flex-direction: column; }
+        .control-group { display: flex; flex-direction: column; position: relative; z-index: 100; }
         .control-group label { font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #475569; }
         .control-group select {
-            padding: 10px 12px; border-radius: 10px; border: 2px solid #cbd5e1; font-family: 'Prompt', sans-serif;
-            font-size: 14px; color: #1e293b; outline: none; cursor: pointer; background-color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 2px solid #cbd5e1;
+            font-family: 'Prompt', sans-serif;
+            font-size: 15px; /* ขนาดฟอนต์ 15px ป้องกัน iOS auto-zoom ซูมหน้าจอเวลากดเลือก */
+            color: #1e293b;
+            outline: none;
+            cursor: pointer;
+            background-color: #f8fafc;
+            position: relative;
+            z-index: 101;
+            pointer-events: auto;
+            -webkit-appearance: menuselect;
+            appearance: menuselect;
         }
         .control-group select:focus { border-color: #3b82f6; background-color: #ffffff; }
 
