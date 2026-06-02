@@ -185,6 +185,140 @@
         .page-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* สไตล์สำหรับ Grid คัดกรองของ อำเภอ และ สังกัด */
+        .grid-container {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .grid-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #475569;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Agency Grid (สังกัด) - อยู่กึ่งกลาง มี 3 ตัวเลือก */
+        .agency-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto 12px auto; /* กึ่งกลาง */
+        }
+        .agency-card {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .agency-card:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+        .agency-card.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-color: transparent;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* District Grid (อำเภอ) */
+        .district-grid-overview {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .district-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .district-card {
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            height: 48px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+        .district-card:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+        }
+        .district-card.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+        .district-card.active .dc-name {
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .district-card.active .dc-pct {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+        }
+        .dc-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            text-align: left;
+        }
+        .dc-pct {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        /* ระดับสีของเป้าหมาย (%) */
+        .pct-excellent { background-color: #e0f2fe; color: #0369a1; border: 1.5px solid #bae6fd; } /* 100% */
+        .pct-good { background-color: #d1fae5; color: #047857; border: 1.5px solid #a7f3d0; } /* >= 95% */
+        .pct-average { background-color: #ecfccb; color: #4d7c0f; border: 1.5px solid #d9f99d; } /* 90-94% */
+        .pct-warning { background-color: #ffedd5; color: #c2410c; border: 1.5px solid #fdba74; } /* 85-89% */
+        .pct-bad { background-color: #fee2e2; color: #b91c1c; border: 1.5px solid #fecaca; } /* < 85% */
+
+        @media(max-width: 991px) {
+            .district-grid { grid-template-columns: repeat(3, 1fr) !important; }
+            .agency-grid { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+        @media(max-width: 768px) {
+            .district-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .agency-grid { grid-template-columns: 1fr !important; gap: 8px; }
+            .grid-container { padding: 16px; }
+        }
+
         /* Responsive มือถือ */
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -216,28 +350,41 @@
         </button>
     </div>
 
-    <div class="controls">
-        <div class="control-group">
-            <label for="districtSelect">📍 กรองตามอำเภอ</label>
-            <select id="districtSelect">
-                <option value="ทั้งหมด">-- ทุกอำเภอ --</option>
-            </select>
+    <div class="grid-container">
+        <!-- 1. กรองตามสังกัด (Grid 3 ปุ่ม ไว้ตรงกลาง) -->
+        <div class="grid-title">🏢 กรองตามสังกัดหน่วยบริการ</div>
+        <div class="agency-grid" id="agencyGrid">
+            <div class="agency-card active" data-agency="ทั้งหมด" onclick="selectAgency('ทั้งหมด')">ทุกสังกัด</div>
+            <div class="agency-card" data-agency="สำนักงานสาธารณสุขจังหวัด" onclick="selectAgency('สำนักงานสาธารณสุขจังหวัด')">สังกัดสำนักงานสาธารณสุขจังหวัด</div>
+            <div class="agency-card" data-agency="องค์การบริหารส่วนจังหวัด" onclick="selectAgency('องค์การบริหารส่วนจังหวัด')">สังกัดองค์การบริหารส่วนจังหวัด</div>
         </div>
-        <div class="control-group">
-            <label for="agencySelect">🏢 กรองตามสังกัด</label>
-            <select id="agencySelect">
-                <option value="ทั้งหมด">-- ทุกสังกัด --</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label for="unitSelect">🏥 กรองตามหน่วยบริการ</label>
-            <select id="unitSelect">
-                <option value="ทั้งหมด">-- ทุกหน่วยบริการ --</option>
-            </select>
-        </div>
-    </div>
 
-    <div class="filter-section">
+        <hr style="border: 0; border-top: 1.5px dashed #e2e8f0; margin: 20px 0;" />
+
+        <!-- 2. กรองตามอำเภอ (Grid ทั้งจังหวัด + 18 อำเภอ) -->
+        <div class="grid-title" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span>📍 กรองตามอำเภอ (คลิกเลือกอำเภอหรือภาพรวมเพื่อดูข้อมูลรายพื้นที่)</span>
+            <span style="font-weight: normal; color: #64748b; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">
+                เกณฑ์สี: 
+                <span class="badge excellent" style="min-width:auto; padding:2px 6px;">100%</span>
+                <span class="badge good" style="min-width:auto; padding:2px 6px;">≥ 95%</span>
+                <span class="badge average" style="min-width:auto; padding:2px 6px;">90-94%</span>
+                <span class="badge warning" style="min-width:auto; padding:2px 6px;">85-89%</span>
+                <span class="badge bad" style="min-width:auto; padding:2px 6px;">&lt; 85%</span>
+            </span>
+        </div>
+        
+        <div class="district-grid-overview">
+            <div class="district-card active" id="dg-ทั้งหมด" onclick="selectDistrict('ทั้งหมด')" style="width: 100%; max-width: 320px; justify-content: center; gap: 12px; height: 48px;">
+                <div class="dc-name" style="flex-grow:0; font-size: 15px; font-weight: 700;">📍 ภาพรวมทั้งจังหวัด</div>
+                <div class="dc-pct pct-good" id="provincial-pct-badge" style="font-size: 13px; padding: 4px 10px;">0.00%</div>
+            </div>
+        </div>
+
+        <div class="district-grid" id="districtGrid">
+            <!-- ไดนามิกสร้างโดย JS -->
+        </div>
+    </div>    <div class="filter-section">
         <span class="filter-section-title">📈 กรองตามระดับผลงานร้อยละ</span>
         <div class="filter-buttons" id="filterButtonGroup">
             <button class="filter-btn active" data-filter="all">ทั้งหมด <span class="filter-count" id="count-all">0</span></button>
@@ -527,29 +674,133 @@
         }
     });
 
-    const districtSelect = document.getElementById('districtSelect');
-    const agencySelect = document.getElementById('agencySelect');
-    const unitSelect = document.getElementById('unitSelect');
+    let selectedDistrict = 'ทั้งหมด';
+    let selectedAgency = 'ทั้งหมด';
     const tableBody = document.getElementById('tableBody');
     const filterButtons = document.querySelectorAll('.filter-btn');
 
-    const districts = [...new Set(data.map(item => item.district))].sort();
-    districts.forEach(d => {
-        let option = document.createElement('option');
-        option.value = d; option.text = d;
-        districtSelect.appendChild(option);
-    });
+    function getPctClass(pct) {
+        if (pct >= 100) return 'pct-excellent';
+        if (pct >= 94.99) return 'pct-good';
+        if (pct >= 90.00) return 'pct-average';
+        if (pct >= 84.99) return 'pct-warning';
+        return 'pct-bad';
+    }
 
-    const agencies = [...new Set(data.map(item => item.agency))].sort();
-    agencies.forEach(a => {
-        let option = document.createElement('option');
-        option.value = a; option.text = a;
-        agencySelect.appendChild(option);
-    });
+    function buildDistrictGrid() {
+        const districtGrid = document.getElementById('districtGrid');
+        districtGrid.innerHTML = '';
+        
+        // 1. คำนวณร้อยละภาพรวมทั้งจังหวัด (กรองตามสังกัดที่เลือกอยู่)
+        let provTarget = 0, provMmr2 = 0;
+        data.forEach(item => {
+            const matchAgency = (selectedAgency === "ทั้งหมด" || item.agency === selectedAgency);
+            if (matchAgency) {
+                provTarget += item.target;
+                provMmr2 += item.mmr2;
+            }
+        });
+        const provPct = provTarget > 0 ? (provMmr2 / provTarget) * 100 : 0;
+        const provBadge = document.getElementById('provincial-pct-badge');
+        if (provBadge) {
+            provBadge.innerText = provPct.toFixed(2) + "%";
+            provBadge.className = 'dc-pct ' + getPctClass(provPct);
+        }
+
+        // 2. คำนวณร้อยละและสร้างการ์ดรายอำเภอ 18 อำเภอ (กรองตามสังกัดที่เลือกอยู่ และเรียงลำดับจากร้อยละมากไปน้อย)
+        const uniqueDistricts = [...new Set(data.map(item => item.district))];
+        let districtList = uniqueDistricts.map(d => {
+            let dTarget = 0, dMmr2 = 0;
+            data.forEach(item => {
+                const matchAgency = (selectedAgency === "ทั้งหมด" || item.agency === selectedAgency);
+                if (item.district === d && matchAgency) {
+                    dTarget += item.target;
+                    dMmr2 += item.mmr2;
+                }
+            });
+            const dPct = dTarget > 0 ? (dMmr2 / dTarget) * 100 : 0;
+            return { name: d, pct: dPct, target: dTarget };
+        });
+
+        // เรียงลำดับจากร้อยละมากไปน้อย (ถ้าเป้าหมายเป็น 0 ให้ไปต่อท้ายสุด)
+        districtList.sort((a, b) => {
+            if (a.target === 0 && b.target > 0) return 1;
+            if (b.target === 0 && a.target > 0) return -1;
+            return b.pct - a.pct;
+        });
+
+        districtList.forEach(dInfo => {
+            const d = dInfo.name;
+            const dPct = dInfo.pct;
+            const dTarget = dInfo.target;
+            
+            // กำหนดสีของการ์ด (ถ้าไม่มีเป้าหมายของสังกัดนี้ ให้แสดงเป็นสีเทา/pct-bad และบอกไม่มีเป้าหมาย)
+            const pctClass = dTarget > 0 ? getPctClass(dPct) : 'pct-bad';
+            const pctText = dTarget > 0 ? dPct.toFixed(1) + "%" : "ไม่มีเป้าหมาย";
+            
+            const card = document.createElement('div');
+            card.className = 'district-card';
+            if (d === selectedDistrict) {
+                card.className += ' active';
+            }
+            card.id = 'dg-' + d;
+            card.setAttribute('onclick', `selectDistrict('${d}')`);
+            card.innerHTML = `
+                <div class="dc-name">${d}</div>
+                <div class="dc-pct ${pctClass}">${pctText}</div>
+            `;
+            districtGrid.appendChild(card);
+        });
+
+        // อัปเดตคลาส active ของปุ่มภาพรวมด้วย
+        const overviewCard = document.getElementById('dg-ทั้งหมด');
+        if (overviewCard) {
+            overviewCard.classList.remove('active');
+            if (selectedDistrict === 'ทั้งหมด') {
+                overviewCard.classList.add('active');
+            }
+        }
+    }
+
+    window.selectDistrict = function(d) {
+        selectedDistrict = d;
+        
+        // อัปเดตคลาส active บน UI ของการ์ดอำเภอ
+        document.querySelectorAll('.district-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        if (d === 'ทั้งหมด') {
+            const overviewCard = document.getElementById('dg-ทั้งหมด');
+            if (overviewCard) overviewCard.classList.add('active');
+        } else {
+            const card = document.getElementById('dg-' + d);
+            if (card) card.classList.add('active');
+        }
+        
+        updateFilterCounts();
+        renderDashboard(true);
+    };
+
+    window.selectAgency = function(a) {
+        selectedAgency = a;
+        
+        // อัปเดตคลาส active บน UI ของการ์ดสังกัด
+        document.querySelectorAll('.agency-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        const card = document.querySelector(`.agency-card[data-agency="${a}"]`);
+        if (card) card.classList.add('active');
+        
+        // เมื่อเปลี่ยนสังกัด ให้คำนวณและอัปเดตหน้าตากริตเลือกอำเภอตามสังกัดนั้นใหม่ทันที!
+        buildDistrictGrid();
+        
+        updateFilterCounts();
+        renderDashboard(true);
+    };
 
     function updateFilterCounts() {
-        let selDistrict = districtSelect.value;
-        let selAgency = agencySelect.value;
+        let selDistrict = selectedDistrict;
+        let selAgency = selectedAgency;
 
         let baseData = data.filter(item => {
             let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
@@ -576,33 +827,7 @@
         document.getElementById('count-lt85').innerText = counts['<85'];
     }
 
-    function updateUnitDropdown() {
-        let selectedDistrict = districtSelect.value;
-        let selectedAgency = agencySelect.value;
-        
-        unitSelect.innerHTML = '<option value="ทั้งหมด">-- ทุกหน่วยบริการ --</option>';
-        
-        let filteredUnits = data.filter(item => {
-            let matchDistrict = (selectedDistrict === "ทั้งหมด" || item.district === selectedDistrict);
-            let matchAgency = (selectedAgency === "ทั้งหมด" || item.agency === selectedAgency);
-            
-            let matchPerformance = true;
-            if (currentPerformanceFilter === "100") matchPerformance = item.percent >= 100;
-            else if (currentPerformanceFilter === "95-99") matchPerformance = item.percent >= 94.99 && item.percent < 100;
-            else if (currentPerformanceFilter === "90-94") matchPerformance = item.percent >= 90.00 && item.percent < 94.99;
-            else if (currentPerformanceFilter === "85-89") matchPerformance = item.percent >= 84.99 && item.percent < 90.00;
-            else if (currentPerformanceFilter === "<85") matchPerformance = item.percent < 84.99;
-
-            return matchDistrict && matchAgency && matchPerformance;
-        });
-        
-        const units = [...new Set(filteredUnits.map(item => item.unit))].sort();
-        units.forEach(u => {
-            let option = document.createElement('option');
-            option.value = u; option.text = u;
-            unitSelect.appendChild(option);
-        });
-    }
+    function updateUnitDropdown() {} // ยุบตัวเลือกหน่วยบริการทิ้งแล้ว จึงไม่ต้องใช้ ปล่อยว่างเพื่อกัน Error
 
     filterButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -610,7 +835,6 @@
             const clickedBtn = e.currentTarget;
             clickedBtn.classList.add('active');
             currentPerformanceFilter = clickedBtn.getAttribute('data-filter');
-            updateUnitDropdown();
             renderDashboard(true); // Reset ไปหน้า 1 เสมอเมื่อเปลี่ยนฟิลเตอร์
         });
     });
@@ -643,7 +867,7 @@
     }
 
     function renderInsightsLists(filteredData) {
-        let isAllDistricts = (districtSelect.value === "ทั้งหมด");
+        let isAllDistricts = (selectedDistrict === "ทั้งหมด");
         
         document.getElementById('insightTitle100').innerHTML = isAllDistricts ? '🌟 รายชื่ออำเภอที่ได้ 100%' : '🌟 รายชื่อหน่วยบริการที่ได้ 100%';
         document.getElementById('insightTitleUnder90').innerHTML = isAllDistricts ? '⚠️ รายชื่ออำเภอที่ได้น้อยกว่า 90%' : '⚠️ รายชื่อหน่วยบริการที่ได้น้อยกว่า 90%';
@@ -692,7 +916,7 @@
     }
 
     function renderCharts(filteredData) {
-        let isAllDistricts = (districtSelect.value === "ทั้งหมด");
+        let isAllDistricts = (selectedDistrict === "ทั้งหมด");
         
         document.getElementById('mainChartTitle').innerHTML = isAllDistricts ? '📊 กราฟแท่งผลงานรายอำเภอ' : '📊 กราฟแท่งผลงานรายหน่วยบริการ';
 
@@ -836,9 +1060,9 @@
     function renderDashboard(resetPage = true) {
         if(resetPage) currentPage = 1;
 
-        let selDistrict = districtSelect.value;
-        let selAgency = agencySelect.value;
-        let selUnit = unitSelect.value;
+        let selDistrict = selectedDistrict;
+        let selAgency = selectedAgency;
+        let selUnit = "ทั้งหมด";
 
         let filteredData = data.filter(item => {
             let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
@@ -910,9 +1134,9 @@
         csv.push('\uFEFF' + "อำเภอ,หน่วยบริการ,สังกัด,เป้าหมาย,MMR2,ร้อยละความครอบคลุม");
         
         // Export ข้อมูลที่กรองทั้งหมด (ไม่เอาแค่ในหน้าปัจจุบัน)
-        let selDistrict = districtSelect.value;
-        let selAgency = agencySelect.value;
-        let selUnit = unitSelect.value;
+        let selDistrict = selectedDistrict;
+        let selAgency = selectedAgency;
+        let selUnit = "ทั้งหมด";
 
         let filteredData = data.filter(item => {
             let matchDistrict = (selDistrict === "ทั้งหมด" || item.district === selDistrict);
@@ -940,11 +1164,9 @@
         downloadLink.click(); document.body.removeChild(downloadLink);
     }
 
-    districtSelect.addEventListener('change', () => { updateFilterCounts(); updateUnitDropdown(); renderDashboard(true); });
-    agencySelect.addEventListener('change', () => { updateFilterCounts(); updateUnitDropdown(); renderDashboard(true); });
-    unitSelect.addEventListener('change', () => { renderDashboard(true); });
-
-    updateFilterCounts(); updateUnitDropdown(); renderDashboard(true);
+    buildDistrictGrid();
+    updateFilterCounts();
+    renderDashboard(true);
 </script>
 
 </body>
