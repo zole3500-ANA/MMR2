@@ -332,8 +332,61 @@
             .charts-container { grid-template-columns: 1fr; }
             .insight-card { padding: 20px; }
             .insight-card h3 { font-size: 18px; }
-            .table-wrapper { max-height: 60vh; } /* จำกัดความสูงตารางในมือถือ ให้มองเห็นปุ่มเปลี่ยนหน้าได้ */
-            .pagination-container { flex-direction: column; align-items: center; text-align: center; }
+        /* CSS for Rank Badges */
+        .rank-badge-1 {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 50px;
+            margin-left: 8px;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+            animation: rank-blink-animation 1.5s infinite ease-in-out;
+            vertical-align: middle;
+        }
+
+        @keyframes rank-blink-animation {
+            0% { opacity: 0.4; transform: scale(0.96); }
+            50% { opacity: 1; transform: scale(1.04); }
+            100% { opacity: 0.4; transform: scale(0.96); }
+        }
+
+        .rank-badge-other {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+            color: #334155;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 50px;
+            margin-left: 8px;
+            vertical-align: middle;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        body.theme-light .rank-badge-other {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+        body.theme-dark .rank-badge-other {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+        body.theme-blue .rank-badge-other {
+            background: linear-gradient(135deg, #3a506b 0%, #1c2541 100%);
+            color: #ffffff;
+            border-color: #3a506b;
+        }
+        body.theme-emerald .rank-badge-other {
+            background: linear-gradient(135deg, #0f766e 0%, #064e3b 100%);
+            color: #f0fdf4;
+            border-color: #0f766e;
         }
     </style>
 </head>
@@ -674,6 +727,18 @@
         }
     });
 
+    // Calculate global ranking across the province
+    let sortedForRanking = [...data].sort((a, b) => b.percent - a.percent);
+    let currentRank = 0;
+    let prevPercent = -1;
+    sortedForRanking.forEach(item => {
+        if (item.percent !== prevPercent) {
+            currentRank++;
+            prevPercent = item.percent;
+        }
+        item.rank = currentRank;
+    });
+
     let selectedDistrict = 'ทั้งหมด';
     let selectedAgency = 'ทั้งหมด';
     const tableBody = document.getElementById('tableBody');
@@ -887,12 +952,13 @@
         Object.keys(mapObj).forEach(k => {
             const tgt = mapObj[k].target;
             const mmr = mapObj[k].mmr2;
-            const pct = tgt > 0 ? (mmr / tgt) * 100 : 0;
-            
-            if (pct >= 100) {
-                list100.push(k);
-            } else if (pct < 90) {
-                listUnder90.push({ name: k, pct: pct });
+            if (tgt > 0) {
+                const pct = (mmr / tgt) * 100;
+                if (pct >= 100) {
+                    list100.push(k);
+                } else if (pct < 90) {
+                    listUnder90.push({ name: k, pct: pct });
+                }
             }
         });
 
@@ -1115,9 +1181,16 @@
             else if (item.percent < 94.99) badgeClass = 'average';
             else if (item.percent < 100) badgeClass = 'good';
 
+            let rankHtml = '';
+            if (item.rank === 1) {
+                rankHtml = `<span class="rank-badge-1">🏆 ลำดับที่ ${item.rank}</span>`;
+            } else {
+                rankHtml = `<span class="rank-badge-other">ลำดับที่ ${item.rank}</span>`;
+            }
+
             tr.innerHTML = `
                 <td><strong>${item.district}</strong></td>
-                <td>${item.unit}</td>
+                <td>${item.unit} ${rankHtml}</td>
                 <td><span style="color: #64748b; font-size: 13px;">${item.agency}</span></td>
                 <td>${item.target}</td>
                 <td>${item.mmr2}</td>
