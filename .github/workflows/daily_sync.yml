@@ -2,9 +2,16 @@ name: Daily HDC API Sync
 
 on:
   schedule:
-    # 02:30 UTC is 09:30 AM Indochina Time (Bangkok GMT+7)
-    - cron: '30 2 * * *'
+    # Multiple cron times for reliability (GitHub Actions free tier may skip/delay cron runs)
+    - cron: '30 2 * * *'   # Primary:  09:30 AM Thailand Time
+    - cron: '0 4 * * *'    # Backup 1: 11:00 AM Thailand Time
+    - cron: '0 6 * * *'    # Backup 2: 01:00 PM Thailand Time
   workflow_dispatch: # Allows manual trigger from the Actions tab
+
+# Prevent multiple runs from overlapping
+concurrency:
+  group: daily-sync
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -13,29 +20,58 @@ jobs:
       contents: write
 
     steps:
+      - name: Check if already synced today
+        id: check_done
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date().toISOString().slice(0, 10);
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'daily_sync.yml',
+              status: 'success',
+              created: `>=${today}T00:00:00Z`,
+              per_page: 1
+            });
+            const alreadyDone = data.total_count > 0;
+            console.log(`Successful runs today: ${data.total_count}. Skip: ${alreadyDone}`);
+            core.setOutput('skip', alreadyDone ? 'true' : 'false');
+
+      - name: Skip notification
+        if: steps.check_done.outputs.skip == 'true'
+        run: echo "✅ Already synced successfully today. Skipping this backup run."
+
       - name: Checkout repository
+        if: steps.check_done.outputs.skip != 'true'
         uses: actions/checkout@v4
 
       - name: Setup uv
+        if: steps.check_done.outputs.skip != 'true'
         uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
 
       - name: Configure Git
+        if: steps.check_done.outputs.skip != 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
       - name: Install OpenVPN
+        if: steps.check_done.outputs.skip != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y openvpn
 
       - name: Connect to Thailand VPN
+        if: steps.check_done.outputs.skip != 'true'
         run: |
           python vpn_connect.py
 
       - name: Run HDC Sync Script
+        if: steps.check_done.outputs.skip != 'true'
         env:
           TZ: Asia/Bangkok
         run: |
