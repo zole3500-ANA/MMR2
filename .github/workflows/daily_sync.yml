@@ -27,21 +27,19 @@ jobs:
         with:
           script: |
             const today = new Date().toISOString().slice(0, 10);
-            const { data } = await github.rest.actions.listWorkflowRuns({
+            const { data } = await github.rest.repos.listCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'daily_sync.yml',
-              status: 'success',
-              created: `>=${today}T00:00:00Z`,
-              per_page: 1
+              path: 'dashboard.html',
+              since: `${today}T00:00:00Z`
             });
-            const alreadyDone = data.total_count > 0;
-            console.log(`Successful runs today: ${data.total_count}. Skip: ${alreadyDone}`);
+            const alreadyDone = data.length > 0;
+            console.log(`Commits to dashboard.html today: ${data.length}. Skip: ${alreadyDone}`);
             core.setOutput('skip', alreadyDone ? 'true' : 'false');
 
       - name: Skip notification
         if: steps.check_done.outputs.skip == 'true'
-        run: echo "✅ Already synced successfully today. Skipping this backup run."
+        run: echo "✅ Already updated dashboard successfully today. Skipping this backup run."
 
       - name: Checkout repository
         if: steps.check_done.outputs.skip != 'true'
